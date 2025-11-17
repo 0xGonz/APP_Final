@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Clinic {
+  id               String            @id @default(uuid())
+  name             String            @unique
+  location         String
+  active           Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  financialRecords FinancialRecord[]
+
+  @@map("clinics")
+}
+
+model FinancialRecord {
+  id                         String   @id @default(uuid())
+  clinicId                   String
+  year                       Int
+  month                      Int
+  date                       DateTime
+  totalIncome                Decimal  @default(0) @db.Decimal(12, 2)
+  hdResearchIncome           Decimal  @default(0) @db.Decimal(12, 2)
+  personalInjuryIncome       Decimal  @default(0) @db.Decimal(12, 2)
+  achCreditIncome            Decimal  @default(0) @db.Decimal(12, 2)
+  nonmedicalIncome           Decimal  @default(0) @db.Decimal(12, 2)
+  otcDepositIncome           Decimal  @default(0) @db.Decimal(12, 2)
+  practiceIncome             Decimal  @default(0) @db.Decimal(12, 2)
+  refundsIncome              Decimal  @default(0) @db.Decimal(12, 2)
+  managementFeeIncome        Decimal  @default(0) @db.Decimal(12, 2)
+  totalCOGS                  Decimal  @default(0) @db.Decimal(12, 2)
+  consultingCOGS             Decimal  @default(0) @db.Decimal(12, 2)
+  medicalWasteCOGS           Decimal  @default(0) @db.Decimal(12, 2)
+  medicalBillingCOGS         Decimal  @default(0) @db.Decimal(12, 2)
+  medicalSuppliesCOGS        Decimal  @default(0) @db.Decimal(12, 2)
+  contractLaborCOGS          Decimal  @default(0) @db.Decimal(12, 2)
+  merchantFeesCOGS           Decimal  @default(0) @db.Decimal(12, 2)
+  managementFeesCOGS         Decimal  @default(0) @db.Decimal(12, 2)
+  medicalBooksCOGS           Decimal  @default(0) @db.Decimal(12, 2)
+  laboratoryFeesCOGS         Decimal  @default(0) @db.Decimal(12, 2)
+  laboratoryDirectoryCOGS    Decimal  @default(0) @db.Decimal(12, 2)
+  labSuppliesCOGS            Decimal  @default(0) @db.Decimal(12, 2)
+  patientExpenseCOGS         Decimal  @default(0) @db.Decimal(12, 2)
+  chronicCareManagementCOGS  Decimal  @default(0) @db.Decimal(12, 2)
+  grossProfit                Decimal  @default(0) @db.Decimal(12, 2)
+  totalExpenses              Decimal  @default(0) @db.Decimal(12, 2)
+  recruitingExpense          Decimal  @default(0) @db.Decimal(12, 2)
+  oxygenGasExpense           Decimal  @default(0) @db.Decimal(12, 2)
+  radiationBadgesExpense     Decimal  @default(0) @db.Decimal(12, 2)
+  equipmentRentalExpense     Decimal  @default(0) @db.Decimal(12, 2)
+  accountingExpense          Decimal  @default(0) @db.Decimal(12, 2)
+  credentialingExpense       Decimal  @default(0) @db.Decimal(12, 2)
+  janitorialExpense          Decimal  @default(0) @db.Decimal(12, 2)
+  automobileExpense          Decimal  @default(0) @db.Decimal(12, 2)
+  automobileExpenseOther     Decimal  @default(0) @db.Decimal(12, 2)
+  gasExpense                 Decimal  @default(0) @db.Decimal(12, 2)
+  parkingExpense             Decimal  @default(0) @db.Decimal(12, 2)
+  advertisingExpense         Decimal  @default(0) @db.Decimal(12, 2)
+  marketingGiftsExpense      Decimal  @default(0) @db.Decimal(12, 2)
+  conferenceFeesExpense      Decimal  @default(0) @db.Decimal(12, 2)
+  miscellaneousExpense       Decimal  @default(0) @db.Decimal(12, 2)
+  bankServiceChargesExpense  Decimal  @default(0) @db.Decimal(12, 2)
+  charitableExpense          Decimal  @default(0) @db.Decimal(12, 2)
+  licensesPermitsExpense     Decimal  @default(0) @db.Decimal(12, 2)
+  licenseFeeExpense          Decimal  @default(0) @db.Decimal(12, 2)
+  telephoneInternetExpense   Decimal  @default(0) @db.Decimal(12, 2)
+  continuingEducationExpense Decimal  @default(0) @db.Decimal(12, 2)
+  duesSubscriptionsExpense   Decimal  @default(0) @db.Decimal(12, 2)
+  insuranceExpense           Decimal  @default(0) @db.Decimal(12, 2)
+  healthInsuranceExpense     Decimal  @default(0) @db.Decimal(12, 2)
+  liabilityInsuranceExpense  Decimal  @default(0) @db.Decimal(12, 2)
+  medicalMalpracticeExpense  Decimal  @default(0) @db.Decimal(12, 2)
+  insuranceExpenseOther      Decimal  @default(0) @db.Decimal(12, 2)
+  legalFeesExpense           Decimal  @default(0) @db.Decimal(12, 2)
+  linensCleaningExpense      Decimal  @default(0) @db.Decimal(12, 2)
+  mealsEntertainmentExpense  Decimal  @default(0) @db.Decimal(12, 2)
+  businessEntertainmentExpense Decimal @default(0) @db.Decimal(12, 2)
+  employeeMealsExpense       Decimal  @default(0) @db.Decimal(12, 2)
+  travelMealsExpense         Decimal  @default(0) @db.Decimal(12, 2)
+  officeSnacksExpense        Decimal  @default(0) @db.Decimal(12, 2)
+  officePartyExpense         Decimal  @default(0) @db.Decimal(12, 2)
+  mealsEntertainmentExpenseOther Decimal @default(0) @db.Decimal(12, 2)
+  movingExpense              Decimal  @default(0) @db.Decimal(12, 2)
+  officeExpense              Decimal  @default(0) @db.Decimal(12, 2)
+  officeSuppliesExpense      Decimal  @default(0) @db.Decimal(12, 2)
+  postageExpense             Decimal  @default(0) @db.Decimal(12, 2)
+  payrollExpense             Decimal  @default(0) @db.Decimal(12, 2)
+  sharedPayroll              Decimal  @default(0) @db.Decimal(12, 2)
+  payrollSharedWages         Decimal  @default(0) @db.Decimal(12, 2)
+  payrollSharedTax           Decimal  @default(0) @db.Decimal(12, 2)
+  payrollSharedOverhead      Decimal  @default(0) @db.Decimal(12, 2)
+  payrollSharedHealth        Decimal  @default(0) @db.Decimal(12, 2)
+  payrollSharedContract      Decimal  @default(0) @db.Decimal(12, 2)
+  payrollSharedReimbursements Decimal @default(0) @db.Decimal(12, 2)
+  physicianPayroll           Decimal  @default(0) @db.Decimal(12, 2)
+  payrollPhysicianWages      Decimal  @default(0) @db.Decimal(12, 2)
+  payrollPhysicianTax        Decimal  @default(0) @db.Decimal(12, 2)
+  payrollPhysicianBenefits   Decimal  @default(0) @db.Decimal(12, 2)
+  payrollPhysicianBonus      Decimal  @default(0) @db.Decimal(12, 2)
+  payrollPhysicianOther      Decimal  @default(0) @db.Decimal(12, 2)
+  inOfficePayroll            Decimal  @default(0) @db.Decimal(12, 2)
+  payrollInOfficeSalary      Decimal  @default(0) @db.Decimal(12, 2)
+  payrollInOfficeWages       Decimal  @default(0) @db.Decimal(12, 2)
+  payrollInOfficeBonus       Decimal  @default(0) @db.Decimal(12, 2)
+  payrollInOfficeNPExtraVisits Decimal @default(0) @db.Decimal(12, 2)
+  payrollInOfficeTelehealth  Decimal  @default(0) @db.Decimal(12, 2)
+  payrollInOfficeAdministration Decimal @default(0) @db.Decimal(12, 2)
+  payrollInOfficePayrollTaxes Decimal @default(0) @db.Decimal(12, 2)
+  payrollInOfficeUnemployment Decimal @default(0) @db.Decimal(12, 2)
+  payrollInOfficeHealthInsurance Decimal @default(0) @db.Decimal(12, 2)
+  payrollInOfficeSimplePlanMatch Decimal @default(0) @db.Decimal(12, 2)
+  payrollInOfficeOther       Decimal  @default(0) @db.Decimal(12, 2)
+  payrollProcessingFees      Decimal  @default(0) @db.Decimal(12, 2)
+  payrollOther               Decimal  @default(0) @db.Decimal(12, 2)
+  printingExpense            Decimal  @default(0) @db.Decimal(12, 2)
+  professionalFeesExpense    Decimal  @default(0) @db.Decimal(12, 2)
+  rentExpense                Decimal  @default(0) @db.Decimal(12, 2)
+  repairsMaintenanceExpense  Decimal  @default(0) @db.Decimal(12, 2)
+  securityExpense            Decimal  @default(0) @db.Decimal(12, 2)
+  smallMedicalEquipExpense   Decimal  @default(0) @db.Decimal(12, 2)
+  taxesExpense               Decimal  @default(0) @db.Decimal(12, 2)
+  personalPropertyTaxExpense Decimal  @default(0) @db.Decimal(12, 2)
+  franchiseTaxExpense        Decimal  @default(0) @db.Decimal(12, 2)
+  computerExpense            Decimal  @default(0) @db.Decimal(12, 2)
+  travelExpense              Decimal  @default(0) @db.Decimal(12, 2)
+  uniformsExpense            Decimal  @default(0) @db.Decimal(12, 2)
+  utilitiesExpense           Decimal  @default(0) @db.Decimal(12, 2)
+  answeringServiceExpense    Decimal  @default(0) @db.Decimal(12, 2)
+  netOrdinaryIncome          Decimal  @default(0) @db.Decimal(12, 2)
+  interestIncome             Decimal  @default(0) @db.Decimal(12, 2)
+  depreciationExpense        Decimal  @default(0) @db.Decimal(12, 2)
+  managementFeePaid          Decimal  @default(0) @db.Decimal(12, 2)
+  interestExpense            Decimal  @default(0) @db.Decimal(12, 2)
+  corporateAdminFee          Decimal  @default(0) @db.Decimal(12, 2)
+  otherExpenses              Decimal  @default(0) @db.Decimal(12, 2)
+  netIncome                  Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+  clinic                     Clinic   @relation(fields: [clinicId], references: [id])
+
+  @@unique([clinicId, year, month])
+  @@index([clinicId])
+  @@index([date])
+  @@index([year, month])
+  @@map("financial_records")
+}
+
+model MetricsCache {
+  id         String   @id @default(uuid())
+  clinicId   String?
+  metricType String
+  year       Int
+  month      Int?
+  value      Decimal  @db.Decimal(12, 2)
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([clinicId, metricType, year, month])
+  @@index([metricType])
+  @@index([clinicId, year, month])
+  @@map("metrics_cache")
+}
+
+model Category {
+  id          String  @id @default(uuid())
+  name        String
+  displayName String
+  type        String
+  sortOrder   Int     @default(0)
+  active      Boolean @default(true)
+
+  @@unique([name, type])
+  @@map("categories")
+}
