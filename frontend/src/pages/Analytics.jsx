@@ -31,11 +31,11 @@ import {
 } from '../utils/dataTransformers';
 import { useDateFilter } from '../context/DateFilterContext';
 import { CHART_COLORS, CHART_CONFIG, formatAxisValue } from '../config/chartTheme';
+import { useFilteredTrends } from '../hooks/useFilteredData';
 
 const Analytics = () => {
   const { startDate, endDate, selectedClinic, setSelectedClinic } = useDateFilter();
   const [selectedMetric, setSelectedMetric] = useState('totalIncome');
-  const currentYear = new Date().getFullYear();
 
   // Fetch clinics for selector
   const { data: clinics } = useQuery({
@@ -57,21 +57,24 @@ const Analytics = () => {
 
   // Fetch growth metrics
   const { data: growthData, isLoading: growthLoading } = useQuery({
-    queryKey: ['growth', selectedClinic, selectedMetric],
+    queryKey: ['growth', selectedClinic, selectedMetric, startDate, endDate],
     queryFn: () =>
       metricsAPI.getGrowth({
         clinicId: selectedClinic === 'all' ? undefined : selectedClinic,
         metric: selectedMetric,
+        startDate,
+        endDate,
       }),
   });
 
   // Fetch KPIs
   const { data: kpis, isLoading: kpisLoading } = useQuery({
-    queryKey: ['kpis', selectedClinic, currentYear],
+    queryKey: ['kpis', selectedClinic, startDate, endDate],
     queryFn: () =>
       metricsAPI.getKPIs({
         clinicId: selectedClinic === 'all' ? undefined : selectedClinic,
-        year: currentYear,
+        startDate,
+        endDate,
       }),
   });
 
@@ -83,13 +86,26 @@ const Analytics = () => {
     return <ErrorMessage message={trendsError.message} />;
   }
 
-  // Transform data using modular utilities
-  const chartData = trendData?.trends
-    ? transformTrendsForChart(trendData.trends, selectedMetric)
-    : [];
+  // Use modular hooks for data filtering and validation
+  const {
+    trends: filteredTrends,
+    summary: trendsSummary,
+    isEmpty: trendsIsEmpty,
+  } = useFilteredTrends(trendData, startDate, endDate, selectedMetric);
 
+  // Transform filtered data for chart display
+  const chartData = transformTrendsForChart(filteredTrends, selectedMetric);
+
+  // Transform other data using modular utilities
   const growthMetrics = transformGrowthData(growthData);
   const kpiMetrics = transformKPIData(kpis);
+
+  // Log data summary for debugging
+  console.log('[Analytics] Data Summary:', {
+    trends: trendsSummary,
+    metric: selectedMetric,
+    growthMetrics,
+  });
 
   const metricOptions = [
     { value: 'totalIncome', label: 'Total Income' },

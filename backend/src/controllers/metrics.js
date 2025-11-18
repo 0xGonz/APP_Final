@@ -1,5 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { buildFlexibleDateFilter, formatDateRange } from '../utils/dateFilters.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -15,16 +16,12 @@ router.get('/kpis', async (req, res) => {
     const where = {};
     if (clinicId) where.clinicId = clinicId;
 
-    // Prioritize date range filtering over year/month
-    if (startDate && endDate) {
-      where.date = {
-        gte: new Date(startDate + 'T00:00:00.000Z'),
-        lte: new Date(endDate + 'T23:59:59.999Z'),
-      };
-    } else {
-      if (year) where.year = parseInt(year);
-      if (month) where.month = parseInt(month);
-    }
+    // Apply comprehensive date filtering
+    const dateFilter = buildFlexibleDateFilter({ startDate, endDate, year, month });
+    Object.assign(where, dateFilter);
+
+    // Log the filter for debugging
+    console.log(`[KPIs] Filtering: ${formatDateRange(startDate, endDate)}, Year: ${year || 'N/A'}, Month: ${month || 'N/A'}, Clinic: ${clinicId || 'all'}`);
 
     const records = await prisma.financialRecord.findMany({
       where,
@@ -98,12 +95,19 @@ router.get('/kpis', async (req, res) => {
  */
 router.get('/growth', async (req, res) => {
   try {
-    const { clinicId, metric = 'totalIncome' } = req.query;
+    const { clinicId, metric = 'totalIncome', startDate, endDate } = req.query;
 
     const where = {};
     if (clinicId && clinicId !== 'all') {
       where.clinicId = clinicId;
     }
+
+    // Apply comprehensive date filtering
+    const dateFilter = buildFlexibleDateFilter({ startDate, endDate });
+    Object.assign(where, dateFilter);
+
+    // Log the filter for debugging
+    console.log(`[Growth] Filtering: ${formatDateRange(startDate, endDate)}, Metric: ${metric}, Clinic: ${clinicId || 'all'}`);
 
     const records = await prisma.financialRecord.findMany({
       where,
@@ -256,16 +260,17 @@ router.get('/growth', async (req, res) => {
       ? yoyGrowthValues.reduce((sum, val) => sum + val, 0) / yoyGrowthValues.length
       : 0;
 
-    // Get most recent growth values (last data point with valid data)
-    const recentGrowth = growthData[growthData.length - 1] || {};
+    // Get most recent growth values from the last data point that has meaningful data (value > 0)
+    // This prevents zero-value placeholder records from skewing the results
+    const recentGrowthWithData = [...growthData].reverse().find(d => d.value > 0) || growthData[growthData.length - 1] || {};
 
     // Use recent values if available, otherwise use averages
-    const finalMomGrowth = recentGrowth.momGrowth !== null && recentGrowth.momGrowth !== undefined
-      ? recentGrowth.momGrowth
+    const finalMomGrowth = recentGrowthWithData.momGrowth !== null && recentGrowthWithData.momGrowth !== undefined
+      ? recentGrowthWithData.momGrowth
       : avgMomGrowth;
 
-    const finalYoyGrowth = recentGrowth.yoyGrowth !== null && recentGrowth.yoyGrowth !== undefined
-      ? recentGrowth.yoyGrowth
+    const finalYoyGrowth = recentGrowthWithData.yoyGrowth !== null && recentGrowthWithData.yoyGrowth !== undefined
+      ? recentGrowthWithData.yoyGrowth
       : avgYoyGrowth;
 
     res.json({
@@ -279,8 +284,8 @@ router.get('/growth', async (req, res) => {
         averageMoMGrowth: avgMomGrowth,
         averageYoYGrowth: avgYoyGrowth,
         totalPeriods: processedRecords.length,
-        recentMoMGrowth: recentGrowth.momGrowth,
-        recentYoYGrowth: recentGrowth.yoyGrowth,
+        recentMoMGrowth: recentGrowthWithData.momGrowth,
+        recentYoYGrowth: recentGrowthWithData.yoyGrowth,
         dataQuality: {
           hasYoyComparisons: yoyGrowthValues.length > 0,
           hasMomComparisons: momGrowthValues.length > 0,

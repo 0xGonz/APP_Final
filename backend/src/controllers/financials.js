@@ -1,5 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { buildFlexibleDateFilter, formatDateRange } from '../utils/dateFilters.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -12,16 +13,11 @@ router.get('/consolidated', async (req, res) => {
   try {
     const { startDate, endDate, year } = req.query;
 
-    // Build where clause
-    const where = {};
-    if (year) {
-      where.year = parseInt(year);
-    } else if (startDate && endDate) {
-      where.date = {
-        gte: new Date(startDate + 'T00:00:00.000Z'),
-        lte: new Date(endDate + 'T23:59:59.999Z'),
-      };
-    }
+    // Build comprehensive where clause using the date filter utility
+    const where = buildFlexibleDateFilter({ startDate, endDate, year });
+
+    // Log the filter for debugging
+    console.log(`[Consolidated] Filtering: ${formatDateRange(startDate, endDate)}, Year: ${year || 'N/A'}`);
 
     // Get all records
     const records = await prisma.financialRecord.findMany({
@@ -479,17 +475,18 @@ router.get('/trends', async (req, res) => {
   try {
     const { clinicId, category, startDate, endDate } = req.query;
 
-    // Build where clause
+    // Build comprehensive where clause
     const where = {};
     if (clinicId && clinicId !== 'all') {
       where.clinicId = clinicId;
     }
-    if (startDate && endDate) {
-      where.date = {
-        gte: new Date(startDate + 'T00:00:00.000Z'),
-        lte: new Date(endDate + 'T23:59:59.999Z'),
-      };
-    }
+
+    // Apply comprehensive date filtering
+    const dateFilter = buildFlexibleDateFilter({ startDate, endDate });
+    Object.assign(where, dateFilter);
+
+    // Log the filter for debugging
+    console.log(`[Trends] Filtering: ${formatDateRange(startDate, endDate)}, Clinic: ${clinicId || 'all'}`);
 
     const records = await prisma.financialRecord.findMany({
       where,

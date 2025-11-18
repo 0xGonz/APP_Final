@@ -7,6 +7,7 @@ import KPICards from '../components/dashboard/KPICards';
 import FinancialTrendChart from '../components/dashboard/FinancialTrendChart';
 import ProfitLossTableComplete from '../components/clinic/ProfitLossTableComplete';
 import { useDateFilter } from '../context/DateFilterContext';
+import { useFilteredPnL, useFilteredTrends } from '../hooks/useFilteredData';
 
 /**
  * Dashboard - Consolidated Financial Overview
@@ -66,7 +67,21 @@ const Dashboard = () => {
     return <ErrorMessage message={trendsError.message} />;
   }
 
-  // Transform KPI data
+  // Use modular hooks for data filtering and validation
+  const {
+    data: filteredPnLData,
+    totals: pnlTotals,
+    summary: pnlSummary,
+    isEmpty: pnlIsEmpty,
+  } = useFilteredPnL(pnlData, startDate, endDate);
+
+  const {
+    trends: filteredTrends,
+    summary: trendsSummary,
+    isEmpty: trendsIsEmpty,
+  } = useFilteredTrends(trendsData, startDate, endDate);
+
+  // Transform KPI data (already filtered by backend)
   const kpiCardData = {
     totalIncome: kpisData?.totalRevenue || 0,
     totalExpenses: kpisData?.totalOperatingExpenses || 0,
@@ -74,16 +89,18 @@ const Dashboard = () => {
     noiMargin: kpisData?.noiMargin || 0,
   };
 
-  // Transform trends data for chart
-  const chartData = trendsData?.trends || [];
-
   // Transform P&L data - add labels for display
-  const formattedPnLData = pnlData
-    ? pnlData.map((item) => ({
-        ...item,
-        label: format(new Date(item.date || `${item.year}-${item.month}-01`), 'MMM yyyy'),
-      }))
-    : [];
+  const formattedPnLData = filteredPnLData.map((item) => ({
+    ...item,
+    label: format(new Date(item.date || `${item.year}-${String(item.month).padStart(2, '0')}-01`), 'MMM yyyy'),
+  }));
+
+  // Log data summary for debugging
+  console.log('[Dashboard] Data Summary:', {
+    pnl: pnlSummary,
+    trends: trendsSummary,
+    kpis: { recordCount: kpisData?.recordCount },
+  });
 
   return (
     <div className="space-y-4">
@@ -110,7 +127,7 @@ const Dashboard = () => {
 
       {/* Financial Trend Chart */}
       <FinancialTrendChart
-        data={chartData}
+        data={filteredTrends}
         title="Monthly Financial Performance"
         subtitle="Total Income, Total Expenses, and NOI over time"
         height={450}

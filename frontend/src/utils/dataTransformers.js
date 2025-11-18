@@ -40,23 +40,21 @@ export const transformTrendsForChart = (trendsData, selectedMetric = 'totalIncom
  * @returns {Object} Normalized growth data with monthOverMonth and yearOverYear
  */
 export const transformGrowthData = (growthData) => {
-  if (!growthData || !growthData.summary) {
+  if (!growthData) {
     return {
       monthOverMonth: 0,
       yearOverYear: 0,
     };
   }
 
-  // Get the most recent MoM and YoY values from the data array
-  const dataArray = growthData.data || [];
-  const recentData = dataArray[dataArray.length - 1] || {};
-
+  // The API now returns monthOverMonth and yearOverYear at the top level
+  // Use those directly for better performance and accuracy
   return {
-    monthOverMonth: recentData.momGrowth || growthData.summary.averageMoMGrowth || 0,
-    yearOverYear: recentData.yoyGrowth || growthData.summary.averageYoYGrowth || 0,
+    monthOverMonth: growthData.monthOverMonth || 0,
+    yearOverYear: growthData.yearOverYear || 0,
     average: {
-      monthOverMonth: growthData.summary.averageMoMGrowth || 0,
-      yearOverYear: growthData.summary.averageYoYGrowth || 0,
+      monthOverMonth: growthData.summary?.averageMoMGrowth || 0,
+      yearOverYear: growthData.summary?.averageYoYGrowth || 0,
     },
     rawData: growthData, // Preserve for advanced usage
   };
