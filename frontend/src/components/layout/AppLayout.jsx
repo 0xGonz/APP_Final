@@ -14,6 +14,7 @@ const AppLayout = ({ children }) => {
     if (path.startsWith('/clinic/')) return 'Clinic Details';
     if (path === '/analytics') return 'Analytics & Trends';
     if (path === '/comparison') return 'Clinic Comparison';
+    if (path === '/data-management') return 'Data Management';
     return 'Dashboard';
   };
 

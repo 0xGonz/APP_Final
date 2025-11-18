@@ -392,7 +392,16 @@ export function parseCSVFile(filePath) {
       }
     }
 
-    financialData.push(monthData);
+    // Check if this month has any non-zero financial data
+    const hasFinancialData = Object.entries(monthData)
+      .filter(([key, value]) => typeof value === 'number' && value !== 0)
+      .length > 0;
+
+    if (hasFinancialData) {
+      financialData.push(monthData);
+    } else {
+      console.log(`Skipping empty month: ${monthCol.month}/${monthCol.year} for ${clinicName}`);
+    }
   }
 
   return {

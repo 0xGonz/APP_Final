@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import http from 'http';
 import { PrismaClient } from '@prisma/client';
 
 // Import routes
@@ -9,6 +10,10 @@ import financialsRouter from './controllers/financials.js';
 import metricsRouter from './controllers/metrics.js';
 import exportRouter from './controllers/export.js';
 import systemRouter from './controllers/system.js';
+import uploadRouter from './routes/upload.js';
+
+// Import WebSocket server
+import { initializeWebSocket, closeAllConnections } from './websocket/server.js';
 
 dotenv.config();
 
@@ -80,6 +85,7 @@ app.use('/api/financials', financialsRouter);
 app.use('/api/metrics', metricsRouter);
 app.use('/api/export', exportRouter);
 app.use('/api/system', systemRouter);
+app.use('/api/upload', uploadRouter);
 
 // 404 handler
 app.use((req, res) => {
@@ -101,22 +107,29 @@ app.use((err, req, res, next) => {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\nShutting down gracefully...');
+  closeAllConnections();
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('\nShutting down gracefully...');
+  closeAllConnections();
   await prisma.$disconnect();
   process.exit(0);
 });
 
+// Create HTTP server and initialize WebSocket
+const server = http.createServer(app);
+initializeWebSocket(server);
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log('='.repeat(60));
   console.log(`🚀 APP23 Financial Dashboard API`);
   console.log('='.repeat(60));
   console.log(`Server running on: http://localhost:${PORT}`);
+  console.log(`WebSocket server: ws://localhost:${PORT}/ws`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`API base: http://localhost:${PORT}/api`);
   console.log('='.repeat(60));

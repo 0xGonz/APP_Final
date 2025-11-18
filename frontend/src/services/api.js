@@ -139,6 +139,40 @@ export const systemAPI = {
 };
 
 // ============================================
+// UPLOAD ENDPOINTS
+// ============================================
+
+export const uploadAPI = {
+  // Upload CSV files
+  uploadCSV: (formData, onUploadProgress) => {
+    return api.post('/upload/csv', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress,
+      timeout: 120000, // 2 minute timeout for uploads
+    });
+  },
+
+  // Get upload history
+  getHistory: (params = {}) => api.get('/upload/history', { params }),
+
+  // Get specific upload details
+  getDetails: (uploadId) => api.get(`/upload/${uploadId}`),
+
+  // Rollback to version
+  rollback: (uploadId, versionId) =>
+    api.post(`/upload/${uploadId}/rollback`, { versionId }),
+
+  // Get version history for a clinic
+  getVersions: (clinicId, params = {}) =>
+    api.get(`/upload/versions/${clinicId}`, { params }),
+
+  // Delete upload
+  delete: (uploadId) => api.delete(`/upload/${uploadId}`),
+};
+
+// ============================================
 // HELPER FUNCTIONS
 // ============================================
 

@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
+  Database,
 } from 'lucide-react';
 import { clinicsAPI } from '../../services/api';
 
@@ -47,6 +48,13 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
         { name: 'Clinic Comparison', href: '/comparison', icon: BarChart3 },
       ],
     },
+    {
+      name: 'Management',
+      section: 'Data Management',
+      items: [
+        { name: 'Data Management', href: '/data-management', icon: Database },
+      ],
+    },
   ];
 
   const isActive = (path) => {
@@ -58,12 +66,12 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full bg-primary-600 text-white transition-all duration-300 z-30 ${
+      className={`fixed left-0 top-0 h-full bg-primary-600 text-white transition-all duration-300 z-30 flex flex-col ${
         isCollapsed ? 'w-16' : 'w-64'
       }`}
     >
       {/* Logo Section */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-primary-700">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-primary-700 flex-shrink-0">
         {!isCollapsed && (
           <div className="flex items-center space-x-2">
             <Building2 className="w-7 h-7 text-success-300" />
@@ -124,7 +132,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
 
       {/* Company Info - Bottom */}
       {!isCollapsed && (
-        <div className="border-t border-primary-700 p-4 bg-primary-700/50">
+        <div className="border-t border-primary-700 p-4 bg-primary-700/50 flex-shrink-0">
           <div className="text-xs text-primary-200">
             <p className="font-semibold">American Pain Partners LLC</p>
             <p className="mt-1 opacity-75">6 Clinic Locations</p>
