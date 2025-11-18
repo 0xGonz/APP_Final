@@ -9,6 +9,8 @@ import {
   Cell,
 } from 'recharts';
 import { formatCurrency } from '../../utils/dataTransformers';
+import { COMPARISON_COLORS, CHART_CONFIG, formatAxisValue } from '../../config/chartTheme';
+import CustomTooltip from '../shared/CustomTooltip';
 
 /**
  * Expense Breakdown Chart Component
@@ -54,89 +56,43 @@ const ExpenseBreakdownChart = ({
   // Calculate total for percentages
   const total = sortedData.reduce((sum, item) => sum + item.value, 0);
 
-  // Color palette for bars
-  const COLORS = [
-    '#3b82f6', // blue
-    '#10b981', // green
-    '#f59e0b', // amber
-    '#ef4444', // red
-    '#8b5cf6', // purple
-    '#ec4899', // pink
-    '#14b8a6', // teal
-    '#f97316', // orange
-    '#6366f1', // indigo
-    '#84cc16', // lime
-  ];
-
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const item = payload[0].payload;
-      const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
-
-      return (
-        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-semibold text-gray-900 mb-2">{item.name}</p>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-gray-600">Amount:</span>
-              <span className="text-sm font-medium text-gray-900">
-                {formatCurrency(item.value)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-gray-600">Percentage:</span>
-              <span className="text-sm font-medium text-gray-900">
-                {percentage}%
-              </span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">{title}</h3>
 
-      <ResponsiveContainer width="100%" height={height}>
-        <BarChart
-          data={sortedData}
-          layout="vertical"
-          margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+      <div role="img" aria-label={`horizontal bar chart showing top ${sortedData.length} expense categories`}>
+        <ResponsiveContainer width="100%" height={height}>
+          <BarChart
+            data={sortedData}
+            layout="vertical"
+            margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+            aria-hidden="true"
+          >
+            <CartesianGrid {...CHART_CONFIG.grid} />
 
-          <XAxis
-            type="number"
-            tick={{ fontSize: 12, fill: '#6b7280' }}
-            stroke="#9ca3af"
-            tickFormatter={(value) =>
-              new Intl.NumberFormat('en-US', {
-                notation: 'compact',
-                compactDisplay: 'short',
-              }).format(value)
-            }
-          />
+            <XAxis
+              type="number"
+              tickFormatter={formatAxisValue}
+              {...CHART_CONFIG.axis}
+            />
 
-          <YAxis
-            type="category"
-            dataKey="name"
-            tick={{ fontSize: 12, fill: '#6b7280' }}
-            stroke="#9ca3af"
-            width={110}
-          />
+            <YAxis
+              type="category"
+              dataKey="name"
+              {...CHART_CONFIG.axis}
+              width={110}
+            />
 
-          <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip />} />
 
-          <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-            {sortedData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} animationDuration={CHART_CONFIG.animation.duration}>
+              {sortedData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COMPARISON_COLORS[index % COMPARISON_COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* Summary below chart */}
       <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">

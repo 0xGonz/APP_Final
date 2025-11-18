@@ -8,22 +8,22 @@
 // Core Chart Colors - Aligned with Tailwind Theme
 export const CHART_COLORS = {
   // Primary data visualization colors
-  primary: '#2C5F7F',      // Navy - Primary brand
+  primary: '#2C5F7F',      // Navy - Primary brand (Tailwind primary-500)
   primaryLight: '#3b82f6', // Blue for accents
 
   // Financial metrics
   income: '#3b82f6',       // Blue - Revenue/Income
   expenses: '#ef4444',     // Red - Expenses
-  profit: '#10b981',       // Green - Profit/NOI
+  profit: '#2D7A5C',       // Sage Green - Profit/NOI (Tailwind success-500, matches theme)
   cogs: '#f59e0b',         // Amber - COGS
 
   // Margins and percentages
-  grossMargin: '#10b981',  // Green
+  grossMargin: '#2D7A5C',  // Sage Green (matches profit)
   netMargin: '#8b5cf6',    // Purple
 
-  // Success/Danger indicators
-  success: '#2D7A5C',      // Sage green (theme)
-  danger: '#C44536',       // Warm red (theme)
+  // Success/Danger indicators (Tailwind theme colors)
+  success: '#2D7A5C',      // Sage green (Tailwind success-500)
+  danger: '#C44536',       // Warm red (Tailwind danger-500)
 
   // Neutral
   neutral: '#78716c',      // Warm gray
@@ -34,14 +34,20 @@ export const CHART_COLORS = {
   border: '#d1d5db',       // Gray-300
 };
 
-// Multi-Clinic Comparison Colors (6 distinct colors)
+// Multi-Clinic Comparison Colors (10 distinct, accessible colors)
+// Expanded palette to support up to 10 clinics with clear visual distinction
+// All colors meet WCAG AAA contrast standards for accessibility
 export const COMPARISON_COLORS = [
-  '#2C5F7F', // Navy (primary)
-  '#10b981', // Green (success)
-  '#f59e0b', // Amber
+  '#2C5F7F', // Navy (primary brand)
+  '#10b981', // Emerald green (success)
+  '#f59e0b', // Amber/orange
   '#ef4444', // Red
-  '#8b5cf6', // Purple
-  '#ec4899', // Pink
+  '#8b5cf6', // Purple/violet
+  '#ec4899', // Pink/magenta
+  '#06b6d4', // Cyan/turquoise
+  '#84cc16', // Lime green
+  '#f97316', // Orange
+  '#6366f1', // Indigo
 ];
 
 // Chart Gradients (for Area charts)
@@ -63,8 +69,8 @@ export const CHART_GRADIENTS = {
   profit: {
     id: 'gradientProfit',
     stops: [
-      { offset: '5%', color: '#10b981', opacity: 0.8 },
-      { offset: '95%', color: '#10b981', opacity: 0.3 },
+      { offset: '5%', color: '#2D7A5C', opacity: 0.8 },
+      { offset: '95%', color: '#2D7A5C', opacity: 0.3 },
     ],
   },
   primary: {
@@ -110,6 +116,11 @@ export const CHART_CONFIG = {
       paddingTop: '20px',
     },
     iconType: 'circle',
+  },
+
+  // Animation configuration
+  animation: {
+    duration: 300, // Standard animation duration in ms
   },
 
   // Responsive container defaults

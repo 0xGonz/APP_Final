@@ -1,5 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CHART_COLORS, CHART_CONFIG } from '../../config/chartTheme';
+import CustomTooltip from '../shared/CustomTooltip';
 
 /**
  * Reusable Profit Margin Chart Component
@@ -10,7 +11,7 @@ const ProfitMarginChart = ({ data, title = 'Profit Margins', height = 300 }) => 
     return (
       <div className="card p-6">
         <h3 className="section-header mb-4">{title}</h3>
-        <p className="text-stone-500 text-center py-8">No data available</p>
+        <p className="text-gray-500 text-center py-8">No data available</p>
       </div>
     );
   }
@@ -37,60 +38,47 @@ const ProfitMarginChart = ({ data, title = 'Profit Margins', height = 300 }) => 
     };
   });
 
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-stone-200 rounded shadow-lg">
-          <p className="font-semibold text-stone-900 mb-2">{payload[0].payload.label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.value.toFixed(1)}%
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  // Custom formatter for percentage tooltip
+  const percentFormatter = (value) => `${value.toFixed(1)}%`;
 
   return (
     <div className="card p-6">
       <h3 className="section-header mb-4">{title}</h3>
-      <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={chartData} margin={CHART_CONFIG.container.margin}>
-          <CartesianGrid {...CHART_CONFIG.grid} />
-          <XAxis dataKey="label" {...CHART_CONFIG.axis} />
-          <YAxis
-            tickFormatter={(value) => `${value.toFixed(0)}%`}
-            domain={[0, 100]}
-            {...CHART_CONFIG.axis}
-          />
-          <Tooltip
-            content={<CustomTooltip />}
-            contentStyle={CHART_CONFIG.tooltip.contentStyle}
-            labelStyle={CHART_CONFIG.tooltip.labelStyle}
-          />
-          <Legend {...CHART_CONFIG.legend} />
-          <Line
-            type="monotone"
-            dataKey="grossMargin"
-            name="Gross Margin"
-            stroke={CHART_COLORS.grossMargin}
-            strokeWidth={2}
-            dot={{ r: 3, fill: CHART_COLORS.grossMargin }}
-            activeDot={{ r: 5 }}
-          />
-          <Line
-            type="monotone"
-            dataKey="netMargin"
-            name="Net Margin"
-            stroke={CHART_COLORS.netMargin}
-            strokeWidth={2}
-            dot={{ r: 3, fill: CHART_COLORS.netMargin }}
-            activeDot={{ r: 5 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <div role="img" aria-label={`line chart showing profit margin trends over ${chartData.length} months`}>
+        <ResponsiveContainer width="100%" height={height}>
+          <LineChart data={chartData} margin={CHART_CONFIG.container.margin} aria-hidden="true">
+            <CartesianGrid {...CHART_CONFIG.grid} />
+            <XAxis dataKey="label" {...CHART_CONFIG.axis} />
+            <YAxis
+              tickFormatter={(value) => `${value.toFixed(0)}%`}
+              domain={[0, 100]}
+              {...CHART_CONFIG.axis}
+            />
+            <Tooltip content={<CustomTooltip formatter={percentFormatter} />} />
+            <Legend {...CHART_CONFIG.legend} />
+            <Line
+              type="monotone"
+              dataKey="grossMargin"
+              name="Gross Margin"
+              stroke={CHART_COLORS.grossMargin}
+              strokeWidth={2}
+              dot={{ r: 3, fill: CHART_COLORS.grossMargin }}
+              activeDot={{ r: 5 }}
+              animationDuration={CHART_CONFIG.animation.duration}
+            />
+            <Line
+              type="monotone"
+              dataKey="netMargin"
+              name="Net Margin"
+              stroke={CHART_COLORS.netMargin}
+              strokeWidth={2}
+              dot={{ r: 3, fill: CHART_COLORS.netMargin }}
+              activeDot={{ r: 5 }}
+              animationDuration={CHART_CONFIG.animation.duration}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

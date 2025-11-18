@@ -1,5 +1,6 @@
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CHART_COLORS, CHART_CONFIG, formatAxisValue } from '../../config/chartTheme';
+import CustomTooltip from '../shared/CustomTooltip';
 
 /**
  * Reusable Revenue Trend Chart Component
@@ -10,20 +11,10 @@ const RevenueTrendChart = ({ data, title = 'Revenue Trend', height = 300, showAr
     return (
       <div className="card p-6">
         <h3 className="section-header mb-4">{title}</h3>
-        <p className="text-stone-500 text-center py-8">No data available</p>
+        <p className="text-gray-500 text-center py-8">No data available</p>
       </div>
     );
   }
-
-  // Format currency for tooltips
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
 
   // Format month labels (e.g., "Jan 2023")
   const formatMonth = (item) => {
@@ -39,53 +30,39 @@ const RevenueTrendChart = ({ data, title = 'Revenue Trend', height = 300, showAr
     totalIncome: Number(item.totalIncome || 0),
   }));
 
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-stone-200 rounded shadow-lg">
-          <p className="font-semibold text-stone-900">{payload[0].payload.label}</p>
-          <p className="text-sm text-primary-600">
-            Revenue: {formatCurrency(payload[0].value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   const Chart = showArea ? AreaChart : LineChart;
   const ChartComponent = showArea ? Area : Line;
+  const chartType = showArea ? 'area chart' : 'line chart';
 
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="section-header mb-0">{title}</h3>
-        <span className="text-xs text-stone-400 font-medium">{data.length} months</span>
+        <span className="text-xs text-gray-500 font-medium">{data.length} months</span>
       </div>
-      <ResponsiveContainer width="100%" height={height}>
-        <Chart data={chartData} margin={CHART_CONFIG.container.margin}>
-          <CartesianGrid {...CHART_CONFIG.grid} />
-          <XAxis dataKey="label" {...CHART_CONFIG.axis} />
-          <YAxis tickFormatter={formatAxisValue} {...CHART_CONFIG.axis} />
-          <Tooltip
-            content={<CustomTooltip />}
-            contentStyle={CHART_CONFIG.tooltip.contentStyle}
-            labelStyle={CHART_CONFIG.tooltip.labelStyle}
-          />
-          <Legend {...CHART_CONFIG.legend} />
-          <ChartComponent
-            type="monotone"
-            dataKey="totalIncome"
-            name="Revenue"
-            stroke={CHART_COLORS.income}
-            fill={CHART_COLORS.income}
-            fillOpacity={showArea ? 0.6 : 1}
-            strokeWidth={2}
-            dot={{ r: 3, fill: CHART_COLORS.income }}
-            activeDot={{ r: 5 }}
-          />
-        </Chart>
-      </ResponsiveContainer>
+      <div role="img" aria-label={`${chartType} showing revenue trend over ${data.length} months`}>
+        <ResponsiveContainer width="100%" height={height}>
+          <Chart data={chartData} margin={CHART_CONFIG.container.margin} aria-hidden="true">
+            <CartesianGrid {...CHART_CONFIG.grid} />
+            <XAxis dataKey="label" {...CHART_CONFIG.axis} />
+            <YAxis tickFormatter={formatAxisValue} {...CHART_CONFIG.axis} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend {...CHART_CONFIG.legend} />
+            <ChartComponent
+              type="monotone"
+              dataKey="totalIncome"
+              name="Revenue"
+              stroke={CHART_COLORS.income}
+              fill={CHART_COLORS.income}
+              fillOpacity={showArea ? 0.6 : 1}
+              strokeWidth={2}
+              dot={{ r: 3, fill: CHART_COLORS.income }}
+              activeDot={{ r: 5 }}
+              animationDuration={CHART_CONFIG.animation.duration}
+            />
+          </Chart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

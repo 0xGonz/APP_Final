@@ -174,6 +174,20 @@ export const formatCurrency = (value) => {
 };
 
 /**
+ * Format currency with accounting notation (parentheses for negatives)
+ * @param {number} value - Numeric value to format
+ * @returns {JSX.Element|string} Formatted currency with conditional styling
+ */
+export const formatCurrencyAccounting = (value) => {
+  const num = Number(value);
+  if (num < 0) {
+    const formatted = formatCurrency(Math.abs(num));
+    return `(${formatted})`;
+  }
+  return formatCurrency(num);
+};
+
+/**
  * Format percentage helper
  * @param {number} value - Numeric value to format
  * @returns {string} Formatted percentage string

@@ -14,7 +14,8 @@ router.get('/kpis', async (req, res) => {
     const { clinicId, year, month, startDate, endDate } = req.query;
 
     const where = {};
-    if (clinicId) where.clinicId = clinicId;
+    // Only filter by clinicId if it's a specific clinic (not "all")
+    if (clinicId && clinicId !== 'all') where.clinicId = clinicId;
 
     // Apply comprehensive date filtering
     const dateFilter = buildFlexibleDateFilter({ startDate, endDate, year, month });
@@ -34,8 +35,29 @@ router.get('/kpis', async (req, res) => {
       },
     });
 
+    // If no records found, return empty KPIs structure instead of 404
     if (records.length === 0) {
-      return res.status(404).json({ error: 'No data found for the specified criteria' });
+      return res.json({
+        totalRevenue: 0,
+        averageMonthlyRevenue: 0,
+        grossProfit: 0,
+        netProfit: 0,
+        noi: 0,
+        grossMargin: 0,
+        netMargin: 0,
+        noiMargin: 0,
+        totalCOGS: 0,
+        totalOperatingExpenses: 0,
+        cogsPercentage: 0,
+        opexPercentage: 0,
+        totalPayroll: 0,
+        payrollPercentage: 0,
+        revenuePerEmployee: 0,
+        ebitda: 0,
+        breakEvenRevenue: 0,
+        recordCount: 0,
+        clinicsAnalyzed: 0,
+      });
     }
 
     // Calculate KPIs
@@ -135,8 +157,28 @@ router.get('/growth', async (req, res) => {
       },
     });
 
+    // If no records found, return empty growth structure instead of 404
     if (records.length === 0) {
-      return res.status(404).json({ error: 'No data found' });
+      return res.json({
+        metric,
+        monthOverMonth: 0,
+        yearOverYear: 0,
+        data: [],
+        summary: {
+          averageMoMGrowth: 0,
+          averageYoYGrowth: 0,
+          totalPeriods: 0,
+          recentMoMGrowth: null,
+          recentYoYGrowth: null,
+          dataQuality: {
+            hasYoyComparisons: false,
+            hasMomComparisons: false,
+            periodsWithYoyData: 0,
+            periodsWithMomData: 0,
+          },
+        },
+        isAggregated: !clinicId || clinicId === 'all',
+      });
     }
 
     let processedRecords;

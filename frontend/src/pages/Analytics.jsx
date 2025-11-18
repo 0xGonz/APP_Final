@@ -1,26 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, Percent } from 'lucide-react';
 import { clinicsAPI, financialsAPI, metricsAPI } from '../services/api';
 import Loading from '../components/Loading';
 import ErrorMessage from '../components/ErrorMessage';
 import ExportButton from '../components/ExportButton';
 import ChartCard from '../components/shared/ChartCard';
+import ChartControls from '../components/charts/ChartControls';
+import FlexibleTrendChart from '../components/charts/FlexibleTrendChart';
 import {
   transformTrendsForChart,
   transformGrowthData,
@@ -36,6 +24,7 @@ import { useFilteredTrends } from '../hooks/useFilteredData';
 const Analytics = () => {
   const { startDate, endDate, selectedClinic, setSelectedClinic } = useDateFilter();
   const [selectedMetric, setSelectedMetric] = useState('totalIncome');
+  const [chartType, setChartType] = useState('area');
 
   // Fetch clinics for selector
   const { data: clinics } = useQuery({
@@ -48,7 +37,7 @@ const Analytics = () => {
     queryKey: ['trends', selectedClinic, selectedMetric, startDate, endDate],
     queryFn: () =>
       financialsAPI.getTrends({
-        clinicId: selectedClinic === 'all' ? undefined : selectedClinic,
+        clinicId: selectedClinic,
         category: selectedMetric,
         startDate,
         endDate,
@@ -56,11 +45,11 @@ const Analytics = () => {
   });
 
   // Fetch growth metrics
-  const { data: growthData, isLoading: growthLoading } = useQuery({
+  const { data: growthData, isLoading: growthLoading, error: growthError } = useQuery({
     queryKey: ['growth', selectedClinic, selectedMetric, startDate, endDate],
     queryFn: () =>
       metricsAPI.getGrowth({
-        clinicId: selectedClinic === 'all' ? undefined : selectedClinic,
+        clinicId: selectedClinic,
         metric: selectedMetric,
         startDate,
         endDate,
@@ -68,24 +57,17 @@ const Analytics = () => {
   });
 
   // Fetch KPIs
-  const { data: kpis, isLoading: kpisLoading } = useQuery({
+  const { data: kpis, isLoading: kpisLoading, error: kpisError } = useQuery({
     queryKey: ['kpis', selectedClinic, startDate, endDate],
     queryFn: () =>
       metricsAPI.getKPIs({
-        clinicId: selectedClinic === 'all' ? undefined : selectedClinic,
+        clinicId: selectedClinic,
         startDate,
         endDate,
       }),
   });
 
-  if (trendsLoading || growthLoading || kpisLoading) {
-    return <Loading message="Loading analytics data..." />;
-  }
-
-  if (trendsError) {
-    return <ErrorMessage message={trendsError.message} />;
-  }
-
+  // ⚠️ IMPORTANT: All hooks must be called BEFORE any conditional returns (Rules of Hooks)
   // Use modular hooks for data filtering and validation
   const {
     trends: filteredTrends,
@@ -93,12 +75,24 @@ const Analytics = () => {
     isEmpty: trendsIsEmpty,
   } = useFilteredTrends(trendData, startDate, endDate, selectedMetric);
 
-  // Transform filtered data for chart display
+  // Transform filtered data for chart display (must happen before early returns)
   const chartData = transformTrendsForChart(filteredTrends, selectedMetric);
 
-  // Transform other data using modular utilities
-  const growthMetrics = transformGrowthData(growthData);
-  const kpiMetrics = transformKPIData(kpis);
+  // Transform other data using modular utilities with null-safety
+  const growthMetrics = transformGrowthData(growthData || { monthOverMonth: 0, yearOverYear: 0 });
+  const kpiMetrics = transformKPIData(kpis || {});
+
+  // NOW check loading/error state AFTER all hooks are called
+  if (trendsLoading || growthLoading || kpisLoading) {
+    return <Loading message="Loading analytics data..." />;
+  }
+
+  // Comprehensive error handling for all API calls
+  if (trendsError || growthError || kpisError) {
+    const errorMessage = trendsError?.message || growthError?.message || kpisError?.message || 'Failed to load analytics data';
+    console.error('[Analytics] Error loading data:', { trendsError, growthError, kpisError });
+    return <ErrorMessage message={errorMessage} />;
+  }
 
   // Log data summary for debugging
   console.log('[Analytics] Data Summary:', {
@@ -234,31 +228,22 @@ const Analytics = () => {
         title={`${metricOptions.find((m) => m.value === selectedMetric)?.label} Trend`}
         isEmpty={chartData.length === 0}
       >
-        <ResponsiveContainer width="100%" height={400}>
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={CHART_COLORS.income} stopOpacity={0.8} />
-                <stop offset="95%" stopColor={CHART_COLORS.income} stopOpacity={0.3} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid {...CHART_CONFIG.grid} />
-            <XAxis dataKey="date" {...CHART_CONFIG.axis} />
-            <YAxis tickFormatter={formatAxisValue} {...CHART_CONFIG.axis} />
-            <Tooltip
-              formatter={(value) => formatCurrency(value)}
-              contentStyle={CHART_CONFIG.tooltip.contentStyle}
-              labelStyle={CHART_CONFIG.tooltip.labelStyle}
-            />
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke={CHART_COLORS.income}
-              fillOpacity={1}
-              fill="url(#colorValue)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {/* Chart Controls */}
+        <div className="mb-4">
+          <ChartControls
+            chartType={chartType}
+            onChartTypeChange={setChartType}
+            availableTypes={['area', 'bar', 'line']}
+          />
+        </div>
+
+        {/* Flexible Trend Chart */}
+        <FlexibleTrendChart
+          data={chartData}
+          chartType={chartType}
+          metric={selectedMetric}
+          height={400}
+        />
       </ChartCard>
 
       {/* Additional Insights */}

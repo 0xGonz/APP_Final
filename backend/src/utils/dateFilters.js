@@ -38,39 +38,54 @@ export function buildDateRangeFilter(startDate, endDate) {
   // Build comprehensive filter with both date field and year/month validation
   return {
     AND: [
-      // Primary filter: date field (with timezone handling)
+      // Primary filter: date field (NO timezone suffix to use local dates)
+      // This prevents timezone conversion issues between local and deployment
       {
         date: {
-          gte: new Date(startDate + 'T00:00:00.000Z'),
-          lte: new Date(endDate + 'T23:59:59.999Z'),
+          gte: new Date(startDate + 'T00:00:00'),
+          lte: new Date(endDate + 'T23:59:59'),
         },
       },
       // Secondary validation: year/month range
-      // This catches any records where the date field might not match year/month
+      // Fixed logic to properly restrict records to the specified range
       {
-        OR: [
-          // Records in start year: month >= startMonth
-          {
-            AND: [
-              { year: startYear },
-              { month: { gte: startMonth } },
+        OR: startYear === endYear
+          ? [
+              // Single year: year must match AND month must be in range
+              {
+                AND: [
+                  { year: startYear },
+                  { month: { gte: startMonth, lte: endMonth } },
+                ],
+              },
+            ]
+          : [
+              // Multi-year: Start year with month >= startMonth
+              {
+                AND: [
+                  { year: startYear },
+                  { month: { gte: startMonth } },
+                ],
+              },
+              // End year with month <= endMonth
+              {
+                AND: [
+                  { year: endYear },
+                  { month: { lte: endMonth } },
+                ],
+              },
+              // Years between start and end (if any)
+              ...(endYear > startYear + 1
+                ? [
+                    {
+                      AND: [
+                        { year: { gt: startYear } },
+                        { year: { lt: endYear } },
+                      ],
+                    },
+                  ]
+                : []),
             ],
-          },
-          // Records in end year: month <= endMonth
-          {
-            AND: [
-              { year: endYear },
-              { month: { lte: endMonth } },
-            ],
-          },
-          // Records in years between start and end
-          ...(endYear > startYear + 1 ? [{
-            AND: [
-              { year: { gt: startYear } },
-              { year: { lt: endYear } },
-            ],
-          }] : []),
-        ],
       },
     ],
   };

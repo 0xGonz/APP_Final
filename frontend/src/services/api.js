@@ -1,13 +1,19 @@
 import axios from 'axios';
 
 // Create axios instance with base configuration
+// Uses environment variable for flexibility across dev/production
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api', // Relative URL works for same-domain deployment
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Log API base URL for debugging (only in development)
+if (import.meta.env.DEV) {
+  console.log('[API] Base URL:', api.defaults.baseURL);
+}
 
 // Request interceptor
 api.interceptors.request.use(

@@ -24,7 +24,9 @@ import Loading from '../components/Loading';
 import ErrorMessage from '../components/ErrorMessage';
 import ExportButton from '../components/ExportButton';
 import ChartCard from '../components/shared/ChartCard';
-import { formatCurrency } from '../utils/dataTransformers';
+import ChartControls from '../components/charts/ChartControls';
+import FlexibleComparisonChart from '../components/charts/FlexibleComparisonChart';
+import { formatCurrency, formatCurrencyAccounting } from '../utils/dataTransformers';
 import { useDateFilter } from '../context/DateFilterContext';
 import { COMPARISON_COLORS, CHART_CONFIG, formatAxisValue, getColorByIndex } from '../config/chartTheme';
 import { LINE_ITEMS, getAllLineItems, getLineItemValue } from '../config/lineItems';
@@ -37,6 +39,10 @@ const Comparison = () => {
 
   // State for table view (monthly breakdown vs totals)
   const [tableView, setTableView] = useState('monthly'); // 'monthly' or 'totals'
+
+  // State for chart type and stacking
+  const [chartType, setChartType] = useState('bar');
+  const [isStacked, setIsStacked] = useState(true);
 
   // Fetch all clinics
   const { data: clinics, isLoading: clinicsLoading } = useQuery({
@@ -444,39 +450,46 @@ const Comparison = () => {
               subtitle={`Comparing ${selectedLineItems.length} line item(s) across ${comparisonData?.clinics?.length || 0} clinic(s)`}
               isEmpty={combinedChartData.length === 0}
             >
-              <ResponsiveContainer width="100%" height={500}>
-                <BarChart data={combinedChartData}>
-                  <CartesianGrid {...CHART_CONFIG.grid} />
-                  <XAxis
-                    dataKey="label"
-                    {...CHART_CONFIG.axis}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis tickFormatter={formatAxisValue} {...CHART_CONFIG.axis} />
-                  <Tooltip
-                    formatter={(value) => formatCurrency(value)}
-                    contentStyle={CHART_CONFIG.tooltip.contentStyle}
-                    labelStyle={CHART_CONFIG.tooltip.labelStyle}
-                  />
-                  <Legend {...CHART_CONFIG.legend} wrapperStyle={{ paddingTop: '20px' }} />
-                  {comparisonData?.clinics?.map((clinic, clinicIndex) =>
-                    selectedLineItems.map((item, itemIndex) => {
-                      const dataKey = `${clinic.name} - ${item.label}`;
-                      const colorIndex = (clinicIndex * 10) + itemIndex;
-                      return (
-                        <Bar
-                          key={dataKey}
-                          dataKey={dataKey}
-                          fill={getColorByIndex(colorIndex)}
-                          stackId={clinic.id}
-                        />
-                      );
-                    })
-                  )}
-                </BarChart>
-              </ResponsiveContainer>
+              {/* Chart Controls */}
+              <div className="mb-4">
+                <ChartControls
+                  chartType={chartType}
+                  onChartTypeChange={setChartType}
+                  isStacked={isStacked}
+                  onStackedChange={setIsStacked}
+                  showStackingToggle={true}
+                  availableTypes={['bar', 'line', 'area']}
+                />
+              </div>
+
+              {/* Warning for stacking metrics with potential negative values */}
+              {isStacked && chartType === 'bar' && selectedLineItems.some(item =>
+                ['netOrdinaryIncome', 'netIncome', 'grossProfit'].includes(item.key)
+              ) && (
+                <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-amber-900 mb-1">
+                      Stacking Recommendation
+                    </h4>
+                    <p className="text-sm text-amber-800">
+                      You're comparing metrics that can have negative values (losses). Stacked view adds values together, which may not be meaningful for profit/loss metrics. Consider using <button onClick={() => setIsStacked(false)} className="font-semibold underline hover:text-amber-900">Grouped view</button> instead for clearer comparison.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Flexible Comparison Chart */}
+              <FlexibleComparisonChart
+                data={combinedChartData}
+                chartType={chartType}
+                isStacked={isStacked}
+                clinics={comparisonData?.clinics || []}
+                selectedLineItems={selectedLineItems}
+                height={500}
+              />
             </ChartCard>
           )}
 
@@ -571,12 +584,14 @@ const Comparison = () => {
                               return (
                                 <td
                                   key={`${clinic.id}-${item.key}`}
-                                  className="px-2 py-0.5 text-right font-mono text-xs border-b border-gray-300"
+                                  className={`px-2 py-0.5 text-right font-mono text-xs border-b border-gray-300 ${
+                                    value < 0 ? 'text-danger-600 font-semibold' : 'text-gray-900'
+                                  }`}
                                   style={{
                                     borderLeft: index === 0 ? '2px solid #e5e7eb' : 'none'
                                   }}
                                 >
-                                  {formatCurrency(value)}
+                                  {formatCurrencyAccounting(value)}
                                 </td>
                               );
                             })
@@ -598,12 +613,14 @@ const Comparison = () => {
                             return (
                               <td
                                 key={`${clinic.id}-${item.key}-total`}
-                                className="px-2 py-1 text-right font-mono border-b border-gray-300 text-xs"
+                                className={`px-2 py-1 text-right font-mono border-b border-gray-300 text-xs ${
+                                  total < 0 ? 'text-danger-600 font-bold' : 'text-gray-900'
+                                }`}
                                 style={{
                                   borderLeft: index === 0 ? '2px solid #e5e7eb' : 'none'
                                 }}
                               >
-                                {formatCurrency(total)}
+                                {formatCurrencyAccounting(total)}
                               </td>
                             );
                           })
@@ -649,8 +666,13 @@ const Comparison = () => {
                               <div className="text-xs text-gray-500">{clinic.location}</div>
                             </td>
                             {lineItemTotals.map((item) => (
-                              <td key={item.key} className="px-2 py-0.5 text-right font-mono text-xs border-b border-gray-300">
-                                {formatCurrency(item.total)}
+                              <td
+                                key={item.key}
+                                className={`px-2 py-0.5 text-right font-mono text-xs border-b border-gray-300 ${
+                                  item.total < 0 ? 'text-danger-600 font-semibold' : 'text-gray-900'
+                                }`}
+                              >
+                                {formatCurrencyAccounting(item.total)}
                               </td>
                             ))}
                           </tr>
