@@ -67,6 +67,10 @@ export const financialsAPI = {
       params: { ...params, clinicIds: clinicIds.join(',') }
     }),
 
+  // Compare time periods for a clinic
+  periodCompare: (clinicId, periods) =>
+    api.post('/financials/period-compare', { clinicId, periods }),
+
   // Get trends
   getTrends: (params = {}) =>
     api.get('/financials/trends', { params }),

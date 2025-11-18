@@ -11,6 +11,7 @@ import {
   ChevronRight,
   MapPin,
   Database,
+  Calendar,
 } from 'lucide-react';
 import { clinicsAPI } from '../../services/api';
 
@@ -44,7 +45,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
       name: 'Reports',
       section: 'Reports & Analytics',
       items: [
-        { name: 'Analytics & Trends', href: '/analytics', icon: TrendingUp },
+        { name: 'Period Comparison', href: '/period-comparison', icon: Calendar },
         { name: 'Clinic Comparison', href: '/comparison', icon: BarChart3 },
       ],
     },

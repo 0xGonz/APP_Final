@@ -98,7 +98,7 @@ const FlexibleComparisonChart = ({
   const generateChartElements = (ElementComponent, elementProps = {}) => {
     return clinics.map((clinic, clinicIndex) =>
       selectedLineItems.map((item, itemIndex) => {
-        const dataKey = `${clinic.name} - ${item.label}`;
+        const dataKey = `${clinic.label || clinic.name} - ${item.label}`;
         // Fixed: Use sequential index to ensure each clinic gets a different color
         const colorIndex = clinicIndex * selectedLineItems.length + itemIndex;
         const color = getColorByIndex(colorIndex);
@@ -144,7 +144,7 @@ const FlexibleComparisonChart = ({
 
   // Generate accessible description
   const getChartDescription = () => {
-    const clinicNames = clinics.map(c => c.name).join(', ');
+    const clinicNames = clinics.map(c => c.label || c.name).join(', ');
     const metricNames = selectedLineItems.map(i => i.label).join(', ');
     const chartTypeLabel = chartType === 'bar' ? 'bar chart' : chartType === 'line' ? 'line chart' : 'area chart';
     const stackingLabel = isStacked && chartType === 'bar' ? 'stacked' : 'grouped';

@@ -1,6 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { buildFlexibleDateFilter, formatDateRange } from '../utils/dateFilters.js';
+import { buildFlexibleDateFilter, buildDateRangeFilter, formatDateRange } from '../utils/dateFilters.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -82,18 +82,33 @@ router.get('/consolidated', async (req, res) => {
           payrollSharedOverhead: 0,
           payrollSharedHealth: 0,
           payrollSharedContract: 0,
+          payrollSharedReimbursements: 0,
           physicianPayroll: 0,
           payrollPhysicianWages: 0,
           payrollPhysicianTax: 0,
           payrollPhysicianBenefits: 0,
           payrollPhysicianBonus: 0,
+          payrollPhysicianOther: 0,
           inOfficePayroll: 0,
           payrollInOfficeSalary: 0,
+          payrollInOfficeWages: 0,
+          payrollInOfficeBonus: 0,
+          payrollInOfficeNPExtraVisits: 0,
+          payrollInOfficeTelehealth: 0,
+          payrollInOfficeAdministration: 0,
+          payrollInOfficePayrollTaxes: 0,
+          payrollInOfficeUnemployment: 0,
+          payrollInOfficeHealthInsurance: 0,
+          payrollInOfficeSimplePlanMatch: 0,
+          payrollInOfficeOther: 0,
           payrollProcessingFees: 0,
+          payrollOther: 0,
           rentExpense: 0,
           advertisingExpense: 0,
           insuranceExpense: 0,
+          insuranceExpenseOther: 0,
           officeExpense: 0,
+          officeSuppliesExpense: 0,
           computerExpense: 0,
           utilitiesExpense: 0,
           telephoneInternetExpense: 0,
@@ -104,8 +119,10 @@ router.get('/consolidated', async (req, res) => {
           repairsMaintenanceExpense: 0,
           equipmentRentalExpense: 0,
           licensesPermitsExpense: 0,
+          licenseFeeExpense: 0,
           duesSubscriptionsExpense: 0,
           mealsEntertainmentExpense: 0,
+          mealsEntertainmentExpenseOther: 0,
           businessEntertainmentExpense: 0,
           employeeMealsExpense: 0,
           travelMealsExpense: 0,
@@ -113,6 +130,7 @@ router.get('/consolidated', async (req, res) => {
           officePartyExpense: 0,
           travelExpense: 0,
           continuingEducationExpense: 0,
+          conferenceFeesExpense: 0,
           healthInsuranceExpense: 0,
           liabilityInsuranceExpense: 0,
           medicalMalpracticeExpense: 0,
@@ -120,6 +138,7 @@ router.get('/consolidated', async (req, res) => {
           credentialingExpense: 0,
           janitorialExpense: 0,
           automobileExpense: 0,
+          automobileExpenseOther: 0,
           gasExpense: 0,
           parkingExpense: 0,
           charitableExpense: 0,
@@ -131,7 +150,10 @@ router.get('/consolidated', async (req, res) => {
           securityExpense: 0,
           smallMedicalEquipExpense: 0,
           taxesExpense: 0,
+          personalPropertyTaxExpense: 0,
+          franchiseTaxExpense: 0,
           uniformsExpense: 0,
+          miscellaneousExpense: 0,
           answeringServiceExpense: 0,
           oxygenGasExpense: 0,
           radiationBadgesExpense: 0,
@@ -189,18 +211,33 @@ router.get('/consolidated', async (req, res) => {
       consolidated[key].payrollSharedOverhead += Number(record.payrollSharedOverhead || 0);
       consolidated[key].payrollSharedHealth += Number(record.payrollSharedHealth || 0);
       consolidated[key].payrollSharedContract += Number(record.payrollSharedContract || 0);
+      consolidated[key].payrollSharedReimbursements += Number(record.payrollSharedReimbursements || 0);
       consolidated[key].physicianPayroll += Number(record.physicianPayroll || 0);
       consolidated[key].payrollPhysicianWages += Number(record.payrollPhysicianWages || 0);
       consolidated[key].payrollPhysicianTax += Number(record.payrollPhysicianTax || 0);
       consolidated[key].payrollPhysicianBenefits += Number(record.payrollPhysicianBenefits || 0);
       consolidated[key].payrollPhysicianBonus += Number(record.payrollPhysicianBonus || 0);
+      consolidated[key].payrollPhysicianOther += Number(record.payrollPhysicianOther || 0);
       consolidated[key].inOfficePayroll += Number(record.inOfficePayroll || 0);
       consolidated[key].payrollInOfficeSalary += Number(record.payrollInOfficeSalary || 0);
+      consolidated[key].payrollInOfficeWages += Number(record.payrollInOfficeWages || 0);
+      consolidated[key].payrollInOfficeBonus += Number(record.payrollInOfficeBonus || 0);
+      consolidated[key].payrollInOfficeNPExtraVisits += Number(record.payrollInOfficeNPExtraVisits || 0);
+      consolidated[key].payrollInOfficeTelehealth += Number(record.payrollInOfficeTelehealth || 0);
+      consolidated[key].payrollInOfficeAdministration += Number(record.payrollInOfficeAdministration || 0);
+      consolidated[key].payrollInOfficePayrollTaxes += Number(record.payrollInOfficePayrollTaxes || 0);
+      consolidated[key].payrollInOfficeUnemployment += Number(record.payrollInOfficeUnemployment || 0);
+      consolidated[key].payrollInOfficeHealthInsurance += Number(record.payrollInOfficeHealthInsurance || 0);
+      consolidated[key].payrollInOfficeSimplePlanMatch += Number(record.payrollInOfficeSimplePlanMatch || 0);
+      consolidated[key].payrollInOfficeOther += Number(record.payrollInOfficeOther || 0);
       consolidated[key].payrollProcessingFees += Number(record.payrollProcessingFees || 0);
+      consolidated[key].payrollOther += Number(record.payrollOther || 0);
       consolidated[key].rentExpense += Number(record.rentExpense || 0);
       consolidated[key].advertisingExpense += Number(record.advertisingExpense || 0);
       consolidated[key].insuranceExpense += Number(record.insuranceExpense || 0);
+      consolidated[key].insuranceExpenseOther += Number(record.insuranceExpenseOther || 0);
       consolidated[key].officeExpense += Number(record.officeExpense || 0);
+      consolidated[key].officeSuppliesExpense += Number(record.officeSuppliesExpense || 0);
       consolidated[key].computerExpense += Number(record.computerExpense || 0);
       consolidated[key].utilitiesExpense += Number(record.utilitiesExpense || 0);
       consolidated[key].telephoneInternetExpense += Number(record.telephoneInternetExpense || 0);
@@ -211,8 +248,10 @@ router.get('/consolidated', async (req, res) => {
       consolidated[key].repairsMaintenanceExpense += Number(record.repairsMaintenanceExpense || 0);
       consolidated[key].equipmentRentalExpense += Number(record.equipmentRentalExpense || 0);
       consolidated[key].licensesPermitsExpense += Number(record.licensesPermitsExpense || 0);
+      consolidated[key].licenseFeeExpense += Number(record.licenseFeeExpense || 0);
       consolidated[key].duesSubscriptionsExpense += Number(record.duesSubscriptionsExpense || 0);
       consolidated[key].mealsEntertainmentExpense += Number(record.mealsEntertainmentExpense || 0);
+      consolidated[key].mealsEntertainmentExpenseOther += Number(record.mealsEntertainmentExpenseOther || 0);
       consolidated[key].businessEntertainmentExpense += Number(record.businessEntertainmentExpense || 0);
       consolidated[key].employeeMealsExpense += Number(record.employeeMealsExpense || 0);
       consolidated[key].travelMealsExpense += Number(record.travelMealsExpense || 0);
@@ -220,6 +259,7 @@ router.get('/consolidated', async (req, res) => {
       consolidated[key].officePartyExpense += Number(record.officePartyExpense || 0);
       consolidated[key].travelExpense += Number(record.travelExpense || 0);
       consolidated[key].continuingEducationExpense += Number(record.continuingEducationExpense || 0);
+      consolidated[key].conferenceFeesExpense += Number(record.conferenceFeesExpense || 0);
       consolidated[key].healthInsuranceExpense += Number(record.healthInsuranceExpense || 0);
       consolidated[key].liabilityInsuranceExpense += Number(record.liabilityInsuranceExpense || 0);
       consolidated[key].medicalMalpracticeExpense += Number(record.medicalMalpracticeExpense || 0);
@@ -227,6 +267,7 @@ router.get('/consolidated', async (req, res) => {
       consolidated[key].credentialingExpense += Number(record.credentialingExpense || 0);
       consolidated[key].janitorialExpense += Number(record.janitorialExpense || 0);
       consolidated[key].automobileExpense += Number(record.automobileExpense || 0);
+      consolidated[key].automobileExpenseOther += Number(record.automobileExpenseOther || 0);
       consolidated[key].gasExpense += Number(record.gasExpense || 0);
       consolidated[key].parkingExpense += Number(record.parkingExpense || 0);
       consolidated[key].charitableExpense += Number(record.charitableExpense || 0);
@@ -238,7 +279,10 @@ router.get('/consolidated', async (req, res) => {
       consolidated[key].securityExpense += Number(record.securityExpense || 0);
       consolidated[key].smallMedicalEquipExpense += Number(record.smallMedicalEquipExpense || 0);
       consolidated[key].taxesExpense += Number(record.taxesExpense || 0);
+      consolidated[key].personalPropertyTaxExpense += Number(record.personalPropertyTaxExpense || 0);
+      consolidated[key].franchiseTaxExpense += Number(record.franchiseTaxExpense || 0);
       consolidated[key].uniformsExpense += Number(record.uniformsExpense || 0);
+      consolidated[key].miscellaneousExpense += Number(record.miscellaneousExpense || 0);
       consolidated[key].answeringServiceExpense += Number(record.answeringServiceExpense || 0);
       consolidated[key].oxygenGasExpense += Number(record.oxygenGasExpense || 0);
       consolidated[key].radiationBadgesExpense += Number(record.radiationBadgesExpense || 0);
@@ -288,18 +332,18 @@ router.get('/compare', async (req, res) => {
 
     const clinicIdArray = clinicIds.split(',');
 
-    // Build where clause
+    // Build where clause with consistent date filtering
     const where = {
       clinicId: { in: clinicIdArray },
     };
 
+    // Add date/year filtering using the same logic as other endpoints
     if (year) {
       where.year = parseInt(year);
     } else if (startDate && endDate) {
-      where.date = {
-        gte: new Date(startDate + 'T00:00:00.000Z'),
-        lte: new Date(endDate + 'T23:59:59.999Z'),
-      };
+      // Use the date filter utility for consistent local timezone handling
+      const dateFilter = buildDateRangeFilter(startDate, endDate);
+      Object.assign(where, dateFilter);
     }
 
     const records = await prisma.financialRecord.findMany({
@@ -464,6 +508,193 @@ router.get('/compare', async (req, res) => {
   } catch (error) {
     console.error('Error comparing clinics:', error);
     res.status(500).json({ error: 'Failed to compare clinics' });
+  }
+});
+
+/**
+ * POST /api/financials/period-compare
+ * Compare same clinic across different time periods
+ */
+router.post('/period-compare', async (req, res) => {
+  try {
+    const { clinicId, periods } = req.body;
+
+    if (!periods || !Array.isArray(periods) || periods.length === 0) {
+      return res.status(400).json({ error: 'periods array is required' });
+    }
+
+    // Define all line item fields to aggregate
+    const incomeFields = [
+      'hdResearchIncome', 'personalInjuryIncome', 'achCreditIncome', 'nonmedicalIncome',
+      'otcDepositIncome', 'practiceIncome', 'refundsIncome', 'managementFeeIncome'
+    ];
+
+    const cogsFields = [
+      'consultingCOGS', 'medicalWasteCOGS', 'medicalBillingCOGS', 'medicalSuppliesCOGS',
+      'contractLaborCOGS', 'merchantFeesCOGS', 'managementFeesCOGS', 'medicalBooksCOGS',
+      'laboratoryFeesCOGS', 'laboratoryDirectoryCOGS', 'labSuppliesCOGS', 'patientExpenseCOGS',
+      'chronicCareManagementCOGS'
+    ];
+
+    const expenseFields = [
+      'recruitingExpense', 'oxygenGasExpense', 'radiationBadgesExpense', 'equipmentRentalExpense',
+      'accountingExpense', 'credentialingExpense', 'janitorialExpense', 'automobileExpense',
+      'automobileExpenseOther', 'gasExpense', 'parkingExpense', 'advertisingExpense', 'marketingGiftsExpense',
+      'bankServiceChargesExpense', 'charitableExpense', 'licensesPermitsExpense', 'licenseFeeExpense',
+      'telephoneInternetExpense', 'conferenceFeesExpense', 'continuingEducationExpense', 'duesSubscriptionsExpense',
+      'insuranceExpense', 'healthInsuranceExpense', 'liabilityInsuranceExpense',
+      'medicalMalpracticeExpense', 'insuranceExpenseOther', 'legalFeesExpense', 'linensCleaningExpense',
+      'mealsEntertainmentExpense', 'businessEntertainmentExpense', 'employeeMealsExpense',
+      'travelMealsExpense', 'officeSnacksExpense', 'officePartyExpense', 'mealsEntertainmentExpenseOther',
+      'movingExpense', 'officeExpense', 'officeSuppliesExpense', 'postageExpense',
+      'payrollExpense', 'sharedPayroll', 'payrollSharedWages', 'payrollSharedTax', 'payrollSharedOverhead',
+      'payrollSharedHealth', 'payrollSharedContract', 'payrollSharedReimbursements',
+      'physicianPayroll', 'payrollPhysicianWages', 'payrollPhysicianTax',
+      'payrollPhysicianBenefits', 'payrollPhysicianBonus', 'payrollPhysicianOther',
+      'inOfficePayroll', 'payrollInOfficeSalary', 'payrollInOfficeWages', 'payrollInOfficeBonus',
+      'payrollInOfficeNPExtraVisits', 'payrollInOfficeTelehealth', 'payrollInOfficeAdministration',
+      'payrollInOfficePayrollTaxes', 'payrollInOfficeUnemployment', 'payrollInOfficeHealthInsurance',
+      'payrollInOfficeSimplePlanMatch', 'payrollInOfficeOther',
+      'payrollProcessingFees', 'payrollOther', 'printingExpense',
+      'professionalFeesExpense', 'rentExpense', 'repairsMaintenanceExpense', 'securityExpense',
+      'smallMedicalEquipExpense', 'taxesExpense', 'personalPropertyTaxExpense', 'franchiseTaxExpense',
+      'computerExpense', 'miscellaneousExpense', 'travelExpense',
+      'uniformsExpense', 'utilitiesExpense', 'answeringServiceExpense'
+    ];
+
+    const otherFields = [
+      'interestIncome', 'netOrdinaryIncome', 'depreciationExpense', 'managementFeePaid', 'interestExpense',
+      'corporateAdminFee', 'otherExpenses'
+    ];
+
+    // Process each period
+    const periodResults = await Promise.all(periods.map(async (period) => {
+      const { label, startDate, endDate } = period;
+
+      if (!startDate || !endDate) {
+        throw new Error(`Period "${label}" missing startDate or endDate`);
+      }
+
+      // Build where clause using the same date filter as other endpoints
+      // This ensures consistent filtering with local timezone (not UTC) and year/month validation
+      const where = buildDateRangeFilter(startDate, endDate);
+
+      // Add clinic filter (or get all clinics for consolidated)
+      if (clinicId && clinicId !== 'all') {
+        where.clinicId = clinicId;
+      }
+
+      // Fetch records for this period
+      const records = await prisma.financialRecord.findMany({
+        where,
+        include: {
+          clinic: {
+            select: {
+              id: true,
+              name: true,
+              location: true,
+            },
+          },
+        },
+        orderBy: [{ year: 'asc' }, { month: 'asc' }],
+      });
+
+      // Initialize aggregation object
+      const lineItems = {
+        income: {},
+        cogs: {},
+        expenses: {},
+        other: {}
+      };
+
+      incomeFields.forEach(field => lineItems.income[field] = 0);
+      cogsFields.forEach(field => lineItems.cogs[field] = 0);
+      expenseFields.forEach(field => lineItems.expenses[field] = 0);
+      otherFields.forEach(field => lineItems.other[field] = 0);
+
+      const periodData = {
+        label,
+        startDate,
+        endDate,
+        totalIncome: 0,
+        totalCOGS: 0,
+        grossProfit: 0,
+        totalExpenses: 0,
+        netIncome: 0,
+        lineItems,
+        clinics: [],
+        recordCount: records.length
+      };
+
+      // Aggregate records
+      records.forEach((record) => {
+        periodData.totalIncome += Number(record.totalIncome);
+        periodData.totalCOGS += Number(record.totalCOGS);
+        periodData.grossProfit += Number(record.grossProfit);
+        periodData.totalExpenses += Number(record.totalExpenses);
+        periodData.netIncome += Number(record.netIncome);
+
+        // Aggregate all line items
+        incomeFields.forEach(field => {
+          periodData.lineItems.income[field] += Number(record[field] || 0);
+        });
+        cogsFields.forEach(field => {
+          periodData.lineItems.cogs[field] += Number(record[field] || 0);
+        });
+        expenseFields.forEach(field => {
+          periodData.lineItems.expenses[field] += Number(record[field] || 0);
+        });
+        otherFields.forEach(field => {
+          periodData.lineItems.other[field] += Number(record[field] || 0);
+        });
+
+        // Track clinics (for consolidated view)
+        if (!periodData.clinics.find(c => c.id === record.clinicId)) {
+          periodData.clinics.push({
+            id: record.clinicId,
+            name: record.clinic.name,
+            location: record.clinic.location
+          });
+        }
+      });
+
+      // Calculate margins
+      periodData.grossMargin = periodData.totalIncome > 0
+        ? ((periodData.grossProfit / periodData.totalIncome) * 100)
+        : 0;
+      periodData.netMargin = periodData.totalIncome > 0
+        ? ((periodData.netIncome / periodData.totalIncome) * 100)
+        : 0;
+      periodData.expenseRatio = periodData.totalIncome > 0
+        ? ((periodData.totalExpenses / periodData.totalIncome) * 100)
+        : 0;
+
+      // Format monthly records for time-series
+      periodData.monthlyRecords = records.map(record => ({
+        date: record.date,
+        year: record.year,
+        month: record.month,
+        label: `${record.month}/${record.year}`,
+        periodLabel: label,
+        clinicName: record.clinic.name,
+        totalIncome: Number(record.totalIncome),
+        totalCOGS: Number(record.totalCOGS),
+        grossProfit: Number(record.grossProfit),
+        totalExpenses: Number(record.totalExpenses),
+        netIncome: Number(record.netIncome),
+        ...incomeFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {}),
+        ...cogsFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {}),
+        ...expenseFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {}),
+        ...otherFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {})
+      }));
+
+      return periodData;
+    }));
+
+    res.json({ periods: periodResults });
+  } catch (error) {
+    console.error('Error comparing periods:', error);
+    res.status(500).json({ error: 'Failed to compare periods', details: error.message });
   }
 });
 
