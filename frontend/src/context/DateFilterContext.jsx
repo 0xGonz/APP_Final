@@ -22,7 +22,7 @@ const STORAGE_KEYS = {
 };
 
 // Migration key - change this to force re-migration for all users
-const MIGRATION_KEY = 'app_filter_migrated_v3_sep2025';
+const MIGRATION_KEY = 'app_filter_migrated_v4_nov2025';
 
 export const DateFilterProvider = ({ children }) => {
   // Latest available data date (fetched from backend)
@@ -75,6 +75,30 @@ export const DateFilterProvider = ({ children }) => {
     };
     fetchLatestDataDate();
   }, []);
+
+  // Refetch latest date when user returns to tab (makes system dynamic)
+  useEffect(() => {
+    const handleFocus = async () => {
+      try {
+        const data = await systemAPI.getDataRange();
+        const dateStr = typeof data.latest.date === 'string' && data.latest.date.includes('T')
+          ? data.latest.date.split('T')[0] + 'T00:00:00'
+          : data.latest.date + 'T00:00:00';
+        const newLatestDate = new Date(dateStr);
+
+        // Only update if date changed
+        if (latestDataDate?.getTime() !== newLatestDate.getTime()) {
+          setLatestDataDate(newLatestDate);
+          console.log('📅 Updated latest data date:', format(newLatestDate, 'MMM d, yyyy'));
+        }
+      } catch (error) {
+        console.error('Failed to refetch latest data date:', error);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [latestDataDate]);
 
   // Force migration and initialize dates after fetching latestDataDate
   useEffect(() => {
