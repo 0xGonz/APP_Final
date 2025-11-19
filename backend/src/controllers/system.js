@@ -17,14 +17,15 @@ router.get('/data-range', async (req, res) => {
         select: { date: true, year: true, month: true },
       }),
       // Find latest record WITH meaningful data (multiple categories)
-      // Requires income AND either expenses or COGS to be non-trivial
+      // Requires REAL income (> $1000) AND either expenses or COGS to be non-trivial
+      // This excludes months with only recurring expenses and no real business activity
       prisma.financialRecord.findFirst({
         where: {
           AND: [
-            { totalIncome: { gt: 0 } },
+            { totalIncome: { gt: 1000 } },  // Require meaningful income, not just recurring/misc
             {
               OR: [
-                { totalExpenses: { gt: 100 } },  // Small threshold to exclude stray values
+                { totalExpenses: { gt: 100 } },
                 { totalCOGS: { gt: 100 } }
               ]
             }
