@@ -8,41 +8,23 @@ const prisma = new PrismaClient();
 /**
  * GET /api/system/data-range
  * Get the actual date range of available data
+ * HARDCODED: Latest date set to September 30, 2025
+ * Update manually when new data is added
  */
 router.get('/data-range', async (req, res) => {
   try {
-    const [earliest, latest] = await Promise.all([
-      prisma.financialRecord.findFirst({
-        orderBy: { date: 'asc' },
-        select: { date: true, year: true, month: true },
-      }),
-      // Find latest record WITH meaningful data (multiple categories)
-      // Requires REAL income (> $1000) AND either expenses or COGS to be non-trivial
-      // This excludes months with only recurring expenses and no real business activity
-      prisma.financialRecord.findFirst({
-        where: {
-          AND: [
-            { totalIncome: { gt: 1000 } },  // Require meaningful income, not just recurring/misc
-            {
-              OR: [
-                { totalExpenses: { gt: 100 } },
-                { totalCOGS: { gt: 100 } }
-              ]
-            }
-          ]
-        },
-        orderBy: { date: 'desc' },
-        select: { date: true, year: true, month: true },
-      }),
-    ]);
+    // Fetch earliest record
+    const earliest = await prisma.financialRecord.findFirst({
+      orderBy: { date: 'asc' },
+      select: { date: true, year: true, month: true },
+    });
 
-    if (!earliest || !latest) {
+    if (!earliest) {
       return res.status(404).json({ error: 'No financial data found' });
     }
 
-    // Calculate LAST day of the month with data (not first day)
-    // Create date from year/month (JS months are 0-indexed, so subtract 1)
-    const lastDayOfLatestMonth = endOfMonth(new Date(latest.year, latest.month - 1, 1));
+    // HARDCODED LATEST DATE - Update manually when new data is added
+    const hardcodedLatestDate = new Date('2025-09-30T00:00:00');
 
     res.json({
       earliest: {
@@ -51,13 +33,13 @@ router.get('/data-range', async (req, res) => {
         month: earliest.month,
       },
       latest: {
-        date: lastDayOfLatestMonth, // Use last day, not first day
-        year: latest.year,
-        month: latest.month,
+        date: hardcodedLatestDate, // Hardcoded to Sep 30, 2025
+        year: 2025,
+        month: 9,
       },
       dateRange: {
         start: earliest.date.toISOString().split('T')[0],
-        end: format(lastDayOfLatestMonth, 'yyyy-MM-dd'), // Sep 30, not Sep 1
+        end: '2025-09-30', // Hardcoded to Sep 30, 2025
       },
     });
   } catch (error) {
