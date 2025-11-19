@@ -56,7 +56,7 @@ const ClinicView = () => {
   const formattedPnLData = pnlData
     ? pnlData.map((item) => ({
         ...item,
-        label: format(new Date(item.date || `${item.year}-${item.month}-01`), 'MMM yyyy'),
+        label: format(new Date(item.date || `${item.year}-${String(item.month).padStart(2, '0')}-01`), 'MMM yyyy'),
         // Map field names for FinancialTrendChart component
         totalIncome: Number(item.totalIncome || 0),
         totalExpenses: Number(item.totalExpenses || 0),

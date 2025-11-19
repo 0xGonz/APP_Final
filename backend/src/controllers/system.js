@@ -16,13 +16,18 @@ router.get('/data-range', async (req, res) => {
         orderBy: { date: 'asc' },
         select: { date: true, year: true, month: true },
       }),
-      // Find latest record WITH actual data (non-zero values)
+      // Find latest record WITH meaningful data (multiple categories)
+      // Requires income AND either expenses or COGS to be non-trivial
       prisma.financialRecord.findFirst({
         where: {
-          OR: [
+          AND: [
             { totalIncome: { gt: 0 } },
-            { totalExpenses: { gt: 0 } },
-            { totalCOGS: { gt: 0 } }
+            {
+              OR: [
+                { totalExpenses: { gt: 100 } },  // Small threshold to exclude stray values
+                { totalCOGS: { gt: 100 } }
+              ]
+            }
           ]
         },
         orderBy: { date: 'desc' },

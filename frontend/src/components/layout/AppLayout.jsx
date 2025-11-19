@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Calendar, Bell, Search } from 'lucide-react';
+import { format } from 'date-fns';
 import Sidebar from './Sidebar';
 import GlobalDateFilterIndicator from './GlobalDateFilterIndicator';
+import { useDateFilter } from '../../context/DateFilterContext';
 
 const AppLayout = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+  const { latestDataDate } = useDateFilter();
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -76,7 +79,9 @@ const AppLayout = ({ children }) => {
                 <p>© 2025 American Pain Partners LLC. All rights reserved.</p>
               </div>
               <div className="flex items-center space-x-4">
-                <span>Data: Jan 2023 - Dec 2025</span>
+                <span>
+                  Data: Jan 2023 - {latestDataDate ? format(latestDataDate, 'MMM yyyy') : 'Loading...'}
+                </span>
                 <span className="flex items-center">
                   <span className="w-2 h-2 bg-success-500 rounded-full mr-1.5"></span>
                   System Online
