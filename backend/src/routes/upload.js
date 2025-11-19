@@ -26,7 +26,8 @@ router.post('/:id/rollback', rollbackUpload);
 // DELETE /api/upload/:id - Delete upload
 router.delete('/:id', deleteUpload);
 
-// GET /api/versions/:clinicId - Get version history for clinic
-router.get('/versions/:clinicId', getClinicVersions);
+// GET /api/upload/versions - Get all version history
+// GET /api/upload/versions/:clinicId - Get version history for specific clinic
+router.get('/versions/:clinicId?', getClinicVersions);
 
 export default router;

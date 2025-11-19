@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Upload, History, Database } from 'lucide-react';
-import { uploadAPI } from '../services/api';
+import { uploadAPI, clinicsAPI } from '../services/api';
 import { useUploadProgress } from '../hooks/useWebSocket';
 import CSVUploadModal from '../components/upload/CSVUploadModal';
 import UploadProgress from '../components/upload/UploadProgress';
@@ -18,6 +18,12 @@ export default function DataManagement() {
   const queryClient = useQueryClient();
   const { isConnected, uploadProgress, getProgress } = useUploadProgress();
 
+  // Fetch clinics for dropdown
+  const { data: clinicsData } = useQuery({
+    queryKey: ['clinics'],
+    queryFn: () => clinicsAPI.getAll(),
+  });
+
   // Fetch upload history
   const { data: historyData, isLoading: historyLoading } = useQuery({
     queryKey: ['uploadHistory'],
@@ -29,8 +35,9 @@ export default function DataManagement() {
   const { data: versionsData, isLoading: versionsLoading } = useQuery({
     queryKey: ['versions', selectedClinic],
     queryFn: () => {
-      if (!selectedClinic) return Promise.resolve({ data: [] });
-      return uploadAPI.getVersions(selectedClinic);
+      // Use 'all' when no clinic is selected to fetch all versions
+      const clinicId = selectedClinic || 'all';
+      return uploadAPI.getVersions(clinicId);
     },
     enabled: activeTab === 'versions',
   });
@@ -68,6 +75,7 @@ export default function DataManagement() {
   const currentProgress = currentUploadId ? getProgress(currentUploadId) : null;
   const uploads = historyData?.data || [];
   const versions = versionsData?.data || [];
+  const clinics = clinicsData?.data || [];
 
   // Get validation errors from current upload if failed
   const validationErrors = currentProgress?.result?.errors || [];
@@ -186,7 +194,7 @@ export default function DataManagement() {
               View and rollback to previous versions of your data
             </p>
 
-            {/* Clinic Filter - You might want to fetch clinics from API */}
+            {/* Clinic Filter */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Filter by Clinic (optional)
@@ -197,7 +205,11 @@ export default function DataManagement() {
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">All Clinics</option>
-                {/* You would populate this from a clinics query */}
+                {clinics.map((clinic) => (
+                  <option key={clinic.id} value={clinic.id}>
+                    {clinic.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

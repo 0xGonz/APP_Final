@@ -207,15 +207,22 @@ export async function rollbackUpload(req, res) {
 }
 
 /**
- * GET /api/versions/:clinicId
- * Get version history for a specific clinic
+ * GET /api/upload/versions (all versions)
+ * GET /api/upload/versions/:clinicId (specific clinic)
+ * Get version history
  */
 export async function getClinicVersions(req, res) {
   try {
     const { clinicId } = req.params;
     const { year, month } = req.query;
 
-    const where = { clinicId };
+    const where = {};
+
+    // Only filter by clinic if clinicId is provided and not 'all'
+    if (clinicId && clinicId !== 'all') {
+      where.clinicId = clinicId;
+    }
+
     if (year) where.year = parseInt(year);
     if (month) where.month = parseInt(month);
 
