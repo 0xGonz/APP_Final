@@ -1,3 +1,4 @@
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -10,6 +11,9 @@ import metricsRouter from './controllers/metrics.js';
 import exportRouter from './controllers/export.js';
 import systemRouter from './controllers/system.js';
 import uploadRouter from './routes/upload.js';
+
+// Import WebSocket
+import { initializeWebSocket, closeAllConnections } from './websocket/server.js';
 
 dotenv.config();
 
@@ -100,29 +104,36 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Create HTTP server and initialize WebSocket
+const server = http.createServer(app);
+initializeWebSocket(server);
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log('='.repeat(50));
   console.log(`🚀 APP23 Financial Dashboard API`);
   console.log('='.repeat(50));
   console.log(`Server: http://localhost:${PORT}`);
+  console.log(`WebSocket: ws://localhost:${PORT}/ws`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Database: ${process.env.DATABASE_URL ? 'Connected' : 'Check .env'}`);
   console.log('='.repeat(50));
 });
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
+const shutdown = async () => {
   console.log('\nGracefully shutting down...');
+  closeAllConnections();
+  server.close(() => {
+    console.log('HTTP server closed');
+  });
   await prisma.$disconnect();
+  console.log('Database disconnected');
   process.exit(0);
-});
+};
 
-process.on('SIGTERM', async () => {
-  console.log('\nGracefully shutting down...');
-  await prisma.$disconnect();
-  process.exit(0);
-});
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 export { prisma };
 export default app;
