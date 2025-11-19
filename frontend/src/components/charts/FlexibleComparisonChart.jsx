@@ -103,9 +103,10 @@ const FlexibleComparisonChart = ({
         const colorIndex = clinicIndex * selectedLineItems.length + itemIndex;
         const color = getColorByIndex(colorIndex);
 
-        // For stacked bar charts, use clinic.id as stackId
+        // For stacked bar charts, use clinic.id or clinic.label as stackId
+        // For period comparison, periods have .label but no .id, so use label
         // For grouped bar charts, don't use stackId
-        const stackId = chartType === 'bar' && isStacked ? clinic.id : undefined;
+        const stackId = chartType === 'bar' && isStacked ? (clinic.id || clinic.label || `stack-${clinicIndex}`) : undefined;
 
         // For bar charts, use Cell component for conditional coloring
         if (chartType === 'bar') {
