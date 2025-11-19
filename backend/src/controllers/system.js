@@ -53,14 +53,15 @@ router.get('/data-range', async (req, res) => {
       });
     }
 
+    // Return dates as timezone-agnostic strings to prevent UTC conversion issues
     res.json({
       earliest: {
-        date: earliest.date,
+        dateString: earliest.date.toISOString().split('T')[0],
         year: earliest.year,
         month: earliest.month,
       },
       latest: {
-        date: latest.date,
+        dateString: latest.date.toISOString().split('T')[0],
         year: latest.year,
         month: latest.month,
       },

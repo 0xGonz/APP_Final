@@ -36,10 +36,12 @@ export const DateFilterProvider = ({ children }) => {
         setIsLoadingDataDate(true);
         const response = await systemAPI.getDataRange();
         
-        if (response && response.latest && response.latest.date) {
-          // Parse the date string from API
-          const latestDate = new Date(response.latest.date);
+        if (response && response.latest) {
+          // Use year/month to construct date in local timezone (avoids UTC shift issues)
+          // This ensures Sep 2025 stays Sep 2025 regardless of server/client timezone
+          const latestDate = new Date(response.latest.year, response.latest.month - 1, 1);
           console.log('📅 Dynamically fetched latest data date:', latestDate);
+          console.log('   Year:', response.latest.year, 'Month:', response.latest.month);
           setLatestDataDate(latestDate);
         } else {
           console.warn('⚠️ Invalid data range response, using today');
