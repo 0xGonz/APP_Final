@@ -22,7 +22,7 @@ const STORAGE_KEYS = {
 };
 
 // Migration key - change this to force re-migration for all users
-const MIGRATION_KEY = 'app_filter_migrated_v5_dynamic';
+const MIGRATION_KEY = 'app_filter_migrated_v6_month_end';
 
 export const DateFilterProvider = ({ children }) => {
   // Latest available data date (Dynamically fetched)
@@ -38,10 +38,11 @@ export const DateFilterProvider = ({ children }) => {
         
         if (response && response.latest) {
           // Use year/month to construct date in local timezone (avoids UTC shift issues)
-          // This ensures Sep 2025 stays Sep 2025 regardless of server/client timezone
-          const latestDate = new Date(response.latest.year, response.latest.month - 1, 1);
+          // Use last day of month since data presence means month is "closed"
+          // new Date(2025, 9, 0) = Sep 30, 2025 (day 0 = last day of previous month)
+          const latestDate = new Date(response.latest.year, response.latest.month, 0);
           console.log('📅 Dynamically fetched latest data date:', latestDate);
-          console.log('   Year:', response.latest.year, 'Month:', response.latest.month);
+          console.log('   Year:', response.latest.year, 'Month:', response.latest.month, '(Last day of month)');
           setLatestDataDate(latestDate);
         } else {
           console.warn('⚠️ Invalid data range response, using today');
