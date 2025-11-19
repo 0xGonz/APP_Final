@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import http from 'http';
 import { PrismaClient } from '@prisma/client';
 
 // Import routes
@@ -11,9 +10,6 @@ import metricsRouter from './controllers/metrics.js';
 import exportRouter from './controllers/export.js';
 import systemRouter from './controllers/system.js';
 import uploadRouter from './routes/upload.js';
-
-// Import WebSocket server
-import { initializeWebSocket, closeAllConnections } from './websocket/server.js';
 
 dotenv.config();
 
@@ -104,36 +100,23 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Graceful shutdown
+// Graceful shutdown (optional, mainly for local dev)
 process.on('SIGINT', async () => {
-  console.log('\nShutting down gracefully...');
-  closeAllConnections();
+  console.log('\nGracefully shutting down from SIGINT (Ctrl+C)');
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('\nShutting down gracefully...');
-  closeAllConnections();
+  console.log('\nGracefully shutting down from SIGTERM');
   await prisma.$disconnect();
   process.exit(0);
 });
 
-// Create HTTP server and initialize WebSocket
-const server = http.createServer(app);
-initializeWebSocket(server);
-
-// Start server
-server.listen(PORT, () => {
-  console.log('='.repeat(60));
-  console.log(`🚀 APP23 Financial Dashboard API`);
-  console.log('='.repeat(60));
-  console.log(`Server running on: http://localhost:${PORT}`);
-  console.log(`WebSocket server: ws://localhost:${PORT}/ws`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`API base: http://localhost:${PORT}/api`);
-  console.log('='.repeat(60));
-});
+// IMPORTANT for Vercel deployment:
+// Do NOT call app.listen() or server.listen() here.
+// Vercel wraps this exported app in a serverless function.
+// For local development, use dev.js instead.
 
 export { prisma };
 export default app;
