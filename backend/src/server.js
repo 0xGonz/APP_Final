@@ -100,23 +100,29 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Graceful shutdown (optional, mainly for local dev)
+// Start server
+app.listen(PORT, () => {
+  console.log('='.repeat(50));
+  console.log(`🚀 APP23 Financial Dashboard API`);
+  console.log('='.repeat(50));
+  console.log(`Server: http://localhost:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Database: ${process.env.DATABASE_URL ? 'Connected' : 'Check .env'}`);
+  console.log('='.repeat(50));
+});
+
+// Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\nGracefully shutting down from SIGINT (Ctrl+C)');
+  console.log('\nGracefully shutting down...');
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('\nGracefully shutting down from SIGTERM');
+  console.log('\nGracefully shutting down...');
   await prisma.$disconnect();
   process.exit(0);
 });
-
-// IMPORTANT for Vercel deployment:
-// Do NOT call app.listen() or server.listen() here.
-// Vercel wraps this exported app in a serverless function.
-// For local development, use dev.js instead.
 
 export { prisma };
 export default app;
