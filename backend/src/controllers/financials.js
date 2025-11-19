@@ -1139,4 +1139,62 @@ router.get('/summary', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/financials/debug-records
+ * Debug endpoint to see all records in database with their dates
+ */
+router.get('/debug-records', async (req, res) => {
+  try {
+    const records = await prisma.financialRecord.findMany({
+      select: {
+        id: true,
+        year: true,
+        month: true,
+        date: true,
+        totalIncome: true,
+        totalExpenses: true,
+        clinic: {
+          select: {
+            name: true,
+            location: true,
+          },
+        },
+      },
+      orderBy: [{ year: 'asc' }, { month: 'asc' }],
+    });
+
+    // Group by clinic for easier reading
+    const byClinic = {};
+    records.forEach((record) => {
+      const clinicName = record.clinic?.name || 'Unknown';
+      if (!byClinic[clinicName]) {
+        byClinic[clinicName] = [];
+      }
+      byClinic[clinicName].push({
+        year: record.year,
+        month: record.month,
+        date: record.date,
+        totalIncome: record.totalIncome,
+        totalExpenses: record.totalExpenses,
+      });
+    });
+
+    res.json({
+      totalRecords: records.length,
+      byClinic,
+      allRecords: records.map((r) => ({
+        clinic: r.clinic?.name,
+        location: r.clinic?.location,
+        year: r.year,
+        month: r.month,
+        date: r.date,
+        totalIncome: r.totalIncome,
+      })),
+    });
+  } catch (error) {
+    console.error('Debug endpoint error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
