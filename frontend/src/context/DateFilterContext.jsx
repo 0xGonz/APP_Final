@@ -158,7 +158,7 @@ export const DateFilterProvider = ({ children }) => {
       id: 'last-6-months',
       label: 'Last 6 Months',
       getRange: () => ({
-        start: format(subMonths(currentDate, 6), 'yyyy-MM-dd'),
+        start: format(startOfMonth(subMonths(currentDate, 5)), 'yyyy-MM-dd'),
         end: format(currentDate, 'yyyy-MM-dd'),
       }),
     },
@@ -166,7 +166,7 @@ export const DateFilterProvider = ({ children }) => {
       id: 'last-12-months',
       label: 'Last 12 Months',
       getRange: () => ({
-        start: format(subMonths(currentDate, 12), 'yyyy-MM-dd'),
+        start: format(startOfMonth(subMonths(currentDate, 11)), 'yyyy-MM-dd'),
         end: format(currentDate, 'yyyy-MM-dd'),
       }),
     },
