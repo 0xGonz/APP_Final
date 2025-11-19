@@ -58,7 +58,11 @@ export const DateFilterProvider = ({ children }) => {
     const fetchLatestDataDate = async () => {
       try {
         const data = await systemAPI.getDataRange();
-        const latestDate = new Date(data.latest.date);
+        // Handle date string with timezone fix
+        const dateStr = typeof data.latest.date === 'string' && data.latest.date.includes('T')
+          ? data.latest.date.split('T')[0] + 'T00:00:00'
+          : data.latest.date + 'T00:00:00';
+        const latestDate = new Date(dateStr);
         setLatestDataDate(latestDate);
         console.log('📅 Latest data date:', format(latestDate, 'MMM d, yyyy'));
       } catch (error) {

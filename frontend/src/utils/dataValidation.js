@@ -19,19 +19,24 @@ export const isRecordInDateRange = (record, startDate, endDate) => {
     return true; // No filter = include all
   }
 
-  const filterStart = new Date(startDate);
-  const filterEnd = new Date(endDate);
+  // Append T00:00:00 to force local timezone interpretation
+  const filterStart = new Date(startDate + 'T00:00:00');
+  const filterEnd = new Date(endDate + 'T00:00:00');
 
   // Method 1: Check using the date field if available
   if (record.date) {
-    const recordDate = new Date(record.date);
+    // Handle both ISO timestamps and YYYY-MM-DD date strings
+    const dateStr = typeof record.date === 'string' && record.date.includes('T')
+      ? record.date.split('T')[0] + 'T00:00:00'
+      : record.date + 'T00:00:00';
+    const recordDate = new Date(dateStr);
     return recordDate >= filterStart && recordDate <= filterEnd;
   }
 
   // Method 2: Check using year/month fields as fallback
   if (record.year !== undefined && record.month !== undefined) {
     // Construct date from year/month (using first day of month)
-    const recordDate = new Date(`${record.year}-${String(record.month).padStart(2, '0')}-01`);
+    const recordDate = new Date(`${record.year}-${String(record.month).padStart(2, '0')}-01T00:00:00`);
     return recordDate >= filterStart && recordDate <= filterEnd;
   }
 
@@ -238,9 +243,15 @@ export const getDataRangeSummary = (records) => {
   // Find min and max dates
   const dates = records
     .map((r) => {
-      if (r.date) return new Date(r.date);
+      if (r.date) {
+        // Handle both ISO timestamps and YYYY-MM-DD date strings
+        const dateStr = typeof r.date === 'string' && r.date.includes('T')
+          ? r.date.split('T')[0] + 'T00:00:00'
+          : r.date + 'T00:00:00';
+        return new Date(dateStr);
+      }
       if (r.year && r.month) {
-        return new Date(`${r.year}-${String(r.month).padStart(2, '0')}-01`);
+        return new Date(`${r.year}-${String(r.month).padStart(2, '0')}-01T00:00:00`);
       }
       return null;
     })

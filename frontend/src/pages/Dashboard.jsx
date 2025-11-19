@@ -90,10 +90,19 @@ const Dashboard = () => {
   };
 
   // Transform P&L data - add labels for display
-  const formattedPnLData = filteredPnLData.map((item) => ({
-    ...item,
-    label: format(new Date(item.date || `${item.year}-${String(item.month).padStart(2, '0')}-01`), 'MMM yyyy'),
-  }));
+  const formattedPnLData = filteredPnLData.map((item) => {
+    // Handle date with timezone fix
+    const dateStr = item.date
+      ? (typeof item.date === 'string' && item.date.includes('T')
+          ? item.date.split('T')[0] + 'T00:00:00'
+          : item.date + 'T00:00:00')
+      : `${item.year}-${String(item.month).padStart(2, '0')}-01T00:00:00`;
+
+    return {
+      ...item,
+      label: format(new Date(dateStr), 'MMM yyyy'),
+    };
+  });
 
   // Log data summary for debugging
   console.log('[Dashboard] Data Summary:', {

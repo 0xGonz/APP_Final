@@ -100,7 +100,7 @@ const PeriodComparison = () => {
 
   // All periods for API call - sorted chronologically (earliest to latest)
   const allPeriods = [currentPeriod, ...comparisonPeriods].sort((a, b) =>
-    new Date(a.startDate) - new Date(b.startDate)
+    new Date(a.startDate + 'T00:00:00') - new Date(b.startDate + 'T00:00:00')
   );
 
   // Dynamic comparison periods based on current period's date range
@@ -276,7 +276,12 @@ const PeriodComparison = () => {
   // Transform data for ONE modular chart showing all selected line items
   // For each month, create data point with all period+lineItem combinations
   const combinedChartData = Array.from(monthsMap.values())
-    .sort((a, b) => new Date(a.date) - new Date(b.date)) // Sort chronologically by actual date
+    .sort((a, b) => {
+      // Sort chronologically by actual date with timezone fix
+      const dateA = a.date.includes('T') ? a.date.split('T')[0] + 'T00:00:00' : a.date + 'T00:00:00';
+      const dateB = b.date.includes('T') ? b.date.split('T')[0] + 'T00:00:00' : b.date + 'T00:00:00';
+      return new Date(dateA) - new Date(dateB);
+    })
     .map(monthData => {
       const dataPoint = {
         label: monthData.label,

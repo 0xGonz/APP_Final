@@ -54,14 +54,23 @@ const ClinicView = () => {
 
   // Transform P&L data to add labels and match FinancialTrendChart field names
   const formattedPnLData = pnlData
-    ? pnlData.map((item) => ({
-        ...item,
-        label: format(new Date(item.date || `${item.year}-${String(item.month).padStart(2, '0')}-01`), 'MMM yyyy'),
-        // Map field names for FinancialTrendChart component
-        totalIncome: Number(item.totalIncome || 0),
-        totalExpenses: Number(item.totalExpenses || 0),
-        netOrdinaryIncome: Number(item.netOrdinaryIncome || 0),
-      }))
+    ? pnlData.map((item) => {
+        // Handle date with timezone fix
+        const dateStr = item.date
+          ? (typeof item.date === 'string' && item.date.includes('T')
+              ? item.date.split('T')[0] + 'T00:00:00'
+              : item.date + 'T00:00:00')
+          : `${item.year}-${String(item.month).padStart(2, '0')}-01T00:00:00`;
+
+        return {
+          ...item,
+          label: format(new Date(dateStr), 'MMM yyyy'),
+          // Map field names for FinancialTrendChart component
+          totalIncome: Number(item.totalIncome || 0),
+          totalExpenses: Number(item.totalExpenses || 0),
+          netOrdinaryIncome: Number(item.netOrdinaryIncome || 0),
+        };
+      })
     : [];
 
   // Calculate KPI data directly from P&L data
