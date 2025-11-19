@@ -52,6 +52,7 @@ export async function processUploadedFiles(uploadRecord, files, emitProgress) {
         const clinicNameFromFile = parseResult?.clinicName;
 
         if (!records || !Array.isArray(records) || records.length === 0) {
+          logger.warn(`⚠️  No valid records in ${file.originalname}`);
           errors.push({
             file: file.originalname,
             error: 'No valid records found in file. Check CSV format and data.'
@@ -59,7 +60,8 @@ export async function processUploadedFiles(uploadRecord, files, emitProgress) {
           continue;
         }
 
-        logger.info(`Parsed ${records.length} records from ${file.originalname} (Clinic: ${clinicNameFromFile})`);
+        logger.info(`📊 Parsed ${records.length} records from ${file.originalname}`);
+        logger.info(`   Clinic from CSV: "${clinicNameFromFile}"`);
 
         // Process each record
         for (const record of records) {
@@ -67,6 +69,7 @@ export async function processUploadedFiles(uploadRecord, files, emitProgress) {
             // Validate record
             const validationError = validateRecord(record);
             if (validationError) {
+              logger.warn(`⚠️  Validation failed: ${record.clinicName} - ${record.year}/${record.month}: ${validationError}`);
               errors.push({
                 file: file.originalname,
                 record: `${record.clinicName} - ${record.year}/${record.month}`,
@@ -201,33 +204,60 @@ function validateRecord(record) {
 }
 
 /**
+ * Normalize clinic name for matching
+ * @param {string} name - Clinic name
+ * @returns {string} Normalized name
+ */
+function normalizeClinicName(name) {
+  if (!name) return '';
+  return name.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+/**
  * Get or create clinic by name
  * @param {string} clinicName - Name of the clinic
  * @returns {Promise<Object>} Clinic record
  */
 async function getOrCreateClinic(clinicName) {
-  // Try to find existing clinic
-  let clinic = await prisma.clinic.findFirst({
-    where: {
-      OR: [
-        { name: clinicName },
-        { name: { contains: clinicName, mode: 'insensitive' } }
-      ]
+  const normalizedSearchName = normalizeClinicName(clinicName);
+
+  logger.info(`🔍 Looking for clinic: "${clinicName}" (normalized: "${normalizedSearchName}")`);
+
+  // Get all active clinics to check matching
+  const allClinics = await prisma.clinic.findMany({
+    where: { active: true }
+  });
+
+  // Try exact match first (case-insensitive)
+  let clinic = allClinics.find(c => normalizeClinicName(c.name) === normalizedSearchName);
+
+  if (clinic) {
+    logger.info(`✅ Found exact match: "${clinic.name}" (ID: ${clinic.id})`);
+    return clinic;
+  }
+
+  // Try location-based match (e.g., "Webster" matches "American Pain Partners LLC - Webster")
+  clinic = allClinics.find(c => {
+    const location = extractLocation(c.name);
+    return normalizeClinicName(location) === normalizedSearchName;
+  });
+
+  if (clinic) {
+    logger.info(`✅ Found location match: "${clinic.name}" (ID: ${clinic.id})`);
+    return clinic;
+  }
+
+  // If not found, create new clinic
+  logger.info(`➕ Creating new clinic: "${clinicName}"`);
+  clinic = await prisma.clinic.create({
+    data: {
+      name: clinicName,
+      location: extractLocation(clinicName),
+      active: true
     }
   });
 
-  // If not found, create new clinic
-  if (!clinic) {
-    logger.info(`Creating new clinic: ${clinicName}`);
-    clinic = await prisma.clinic.create({
-      data: {
-        name: clinicName,
-        location: extractLocation(clinicName),
-        active: true
-      }
-    });
-  }
-
+  logger.info(`✅ Created clinic: "${clinic.name}" (ID: ${clinic.id})`);
   return clinic;
 }
 

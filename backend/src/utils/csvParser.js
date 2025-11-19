@@ -301,6 +301,28 @@ function extractClinicName(filename) {
 }
 
 /**
+ * Extract clinic location from full clinic name in CSV
+ * E.g., "American Pain Partners LLC - Webster" => "Webster"
+ */
+function extractClinicLocation(fullName) {
+  if (!fullName || typeof fullName !== 'string') return null;
+
+  // Pattern: "American Pain Partners LLC - Location"
+  const match = fullName.match(/American Pain Partners LLC\s*-\s*(.+)/i);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+
+  // If it doesn't match the pattern, check if it's just a location name
+  const cleanName = fullName.trim();
+  if (cleanName && !cleanName.includes('LLC') && !cleanName.includes('Profit') && !cleanName.includes('Loss')) {
+    return cleanName;
+  }
+
+  return null;
+}
+
+/**
  * Parse month from column header (e.g., "Jan 23" => {year: 2023, month: 1})
  */
 function parseMonthHeader(header) {
@@ -331,9 +353,7 @@ function parseMonthHeader(header) {
  */
 export function parseCSVFile(filePath) {
   const filename = path.basename(filePath);
-  const clinicName = extractClinicName(filename);
-
-  console.log(`Parsing ${filename} for clinic: ${clinicName}`);
+  const clinicNameFromFile = extractClinicName(filename);
 
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const records = parse(fileContent, {
@@ -344,6 +364,17 @@ export function parseCSVFile(filePath) {
   if (records.length < 5) {
     throw new Error(`Invalid CSV format: ${filename}`);
   }
+
+  // Try to extract clinic name from Row 0 (e.g., "American Pain Partners LLC - Webster")
+  const row0Text = records[0] && records[0][0];
+  const clinicLocationFromCSV = extractClinicLocation(row0Text);
+
+  // Prefer CSV content over filename, fallback to filename
+  const clinicName = clinicLocationFromCSV || clinicNameFromFile;
+
+  console.log(`📄 Parsing ${filename}`);
+  console.log(`   CSV Row 0: "${row0Text}"`);
+  console.log(`   Extracted clinic: "${clinicName}"`);
 
   // Row 4 (index 3) contains month headers
   const headerRow = records[3];
