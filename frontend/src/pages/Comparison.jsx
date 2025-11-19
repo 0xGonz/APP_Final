@@ -505,8 +505,8 @@ const Comparison = () => {
                     </h2>
                     <p className="text-sm text-gray-600 mt-1">
                       {tableView === 'monthly'
-                        ? `Monthly data for selected line items (${format(new Date(startDate), 'MMM d, yyyy')} - ${format(new Date(endDate), 'MMM d, yyyy')})`
-                        : `Aggregated totals for selected line items (${format(new Date(startDate), 'MMM d, yyyy')} - ${format(new Date(endDate), 'MMM d, yyyy')})`
+                        ? `Monthly data for selected line items (${format(new Date(startDate + 'T00:00:00'), 'MMM d, yyyy')} - ${format(new Date(endDate + 'T00:00:00'), 'MMM d, yyyy')})`
+                        : `Aggregated totals for selected line items (${format(new Date(startDate + 'T00:00:00'), 'MMM d, yyyy')} - ${format(new Date(endDate + 'T00:00:00'), 'MMM d, yyyy')})`
                       }
                     </p>
                   </div>

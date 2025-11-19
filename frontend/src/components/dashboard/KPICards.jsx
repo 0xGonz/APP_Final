@@ -71,8 +71,10 @@ const KPICards = ({ data, isLoading = false, metadata = null }) => {
     }
 
     if (dateRange?.startDate && dateRange?.endDate) {
-      const start = format(new Date(dateRange.startDate), 'MMM d, yyyy');
-      const end = format(new Date(dateRange.endDate), 'MMM d, yyyy');
+      // Parse dates as local dates to avoid timezone conversion issues
+      // Append 'T00:00:00' to force local timezone interpretation
+      const start = format(new Date(dateRange.startDate + 'T00:00:00'), 'MMM d, yyyy');
+      const end = format(new Date(dateRange.endDate + 'T00:00:00'), 'MMM d, yyyy');
       parts.push(`${start} - ${end}`);
     }
 

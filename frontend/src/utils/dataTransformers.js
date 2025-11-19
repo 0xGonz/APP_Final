@@ -24,8 +24,14 @@ export const transformTrendsForChart = (trendsData, selectedMetric = 'totalIncom
       ? parseFloat(item.categoryValue)
       : parseFloat(item[selectedMetric] || 0);
 
+    // Use year/month directly to avoid timezone issues
+    // This ensures "2025-01-01" is always displayed as "Jan 2025" regardless of timezone
+    const dateStr = item.date?.includes('T')
+      ? item.date.split('T')[0] + 'T00:00:00'  // Force local timezone
+      : item.date;
+
     return {
-      date: format(new Date(item.date), 'MMM yyyy'),
+      date: format(new Date(dateStr || `${item.year}-${String(item.month).padStart(2, '0')}-01`), 'MMM yyyy'),
       value,
       year: item.year,
       month: item.month,
