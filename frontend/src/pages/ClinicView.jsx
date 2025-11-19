@@ -116,7 +116,7 @@ const ClinicView = () => {
       />
 
       {/* Acquisition Note for West Houston */}
-      {clinic?.id === 'e9f5c87d-274b-489f-ab78-8ff2c4dc13f3' && (
+      {(clinic?.name === 'West Houston' || clinic?.location === 'West Houston') && (
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
           <div className="flex items-start">
             <div className="flex-shrink-0">
