@@ -22,12 +22,39 @@ const STORAGE_KEYS = {
 };
 
 // Migration key - change this to force re-migration for all users
-const MIGRATION_KEY = 'app_filter_migrated_v4_nov2025';
+const MIGRATION_KEY = 'app_filter_migrated_v5_dynamic';
 
 export const DateFilterProvider = ({ children }) => {
-  // Latest available data date (HARDCODED - update manually when new data is added)
-  const [latestDataDate, setLatestDataDate] = useState(new Date('2025-09-30T00:00:00'));
-  const [isLoadingDataDate, setIsLoadingDataDate] = useState(false);
+  // Latest available data date (Dynamically fetched)
+  const [latestDataDate, setLatestDataDate] = useState(null);
+  const [isLoadingDataDate, setIsLoadingDataDate] = useState(true);
+
+  // Fetch latest available data date from backend
+  useEffect(() => {
+    const fetchDataDate = async () => {
+      try {
+        setIsLoadingDataDate(true);
+        const response = await systemAPI.getDataRange();
+        
+        if (response && response.latest && response.latest.date) {
+          // Parse the date string from API
+          const latestDate = new Date(response.latest.date);
+          console.log('📅 Dynamically fetched latest data date:', latestDate);
+          setLatestDataDate(latestDate);
+        } else {
+          console.warn('⚠️ Invalid data range response, using today');
+          setLatestDataDate(new Date());
+        }
+      } catch (error) {
+        console.error('❌ Failed to fetch latest data date:', error);
+        setLatestDataDate(new Date()); // Fallback to today
+      } finally {
+        setIsLoadingDataDate(false);
+      }
+    };
+
+    fetchDataDate();
+  }, []);
 
   // Initialize from localStorage (null if not found - will be set after fetching latestDataDate)
   const [startDate, setStartDate] = useState(() => {
@@ -52,9 +79,6 @@ export const DateFilterProvider = ({ children }) => {
     const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_CLINICS);
     return stored ? JSON.parse(stored) : [];
   });
-
-  // HARDCODED DATE - No need to fetch from backend
-  // When new data is added, update the hardcoded date above (line 29) and bump migration key (line 25)
 
   // Force migration and initialize dates after fetching latestDataDate
   useEffect(() => {

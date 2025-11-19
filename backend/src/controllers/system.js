@@ -19,12 +19,39 @@ router.get('/data-range', async (req, res) => {
       select: { date: true, year: true, month: true },
     });
 
-    if (!earliest) {
-      return res.status(404).json({ error: 'No financial data found' });
-    }
+    // Fetch latest record with ACTUAL data (non-zero income or expenses)
+    // This filters out placeholder months (Oct/Nov/Dec) that only contain zeros
+    const latest = await prisma.financialRecord.findFirst({
+      where: {
+        OR: [
+          { totalIncome: { not: 0 } },
+          { totalExpenses: { not: 0 } }
+        ]
+      },
+      orderBy: { date: 'desc' },
+      select: { date: true, year: true, month: true },
+    });
 
-    // HARDCODED LATEST DATE - Update manually when new data is added
-    const hardcodedLatestDate = new Date('2025-09-30T00:00:00');
+    if (!earliest || !latest) {
+      // Fallback if no data exists
+      const now = new Date();
+      return res.json({
+        earliest: {
+          date: new Date(now.getFullYear(), 0, 1),
+          year: now.getFullYear(),
+          month: 1,
+        },
+        latest: {
+          date: now,
+          year: now.getFullYear(),
+          month: now.getMonth() + 1,
+        },
+        dateRange: {
+          start: format(new Date(now.getFullYear(), 0, 1), 'yyyy-MM-dd'),
+          end: format(now, 'yyyy-MM-dd'),
+        },
+      });
+    }
 
     res.json({
       earliest: {
@@ -33,13 +60,13 @@ router.get('/data-range', async (req, res) => {
         month: earliest.month,
       },
       latest: {
-        date: hardcodedLatestDate, // Hardcoded to Sep 30, 2025
-        year: 2025,
-        month: 9,
+        date: latest.date,
+        year: latest.year,
+        month: latest.month,
       },
       dateRange: {
         start: earliest.date.toISOString().split('T')[0],
-        end: '2025-09-30', // Hardcoded to Sep 30, 2025
+        end: latest.date.toISOString().split('T')[0],
       },
     });
   } catch (error) {

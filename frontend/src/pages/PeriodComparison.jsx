@@ -58,7 +58,12 @@ const isExpenseLineItem = (itemKey) => {
 };
 
 const PeriodComparison = () => {
-  const { startDate: currentStart, endDate: currentEnd, selectedPreset } = useDateFilter();
+  const { 
+    startDate: currentStart, 
+    endDate: currentEnd, 
+    selectedPreset,
+    isLoadingDataDate 
+  } = useDateFilter();
 
   // State for selected clinics (multiple selection like Clinic Comparison)
   const [selectedClinics, setSelectedClinics] = useState([]);
@@ -88,71 +93,77 @@ const PeriodComparison = () => {
     queryFn: systemAPI.getDataRange,
   });
 
-  // Current period object (always included)
-  const currentPeriod = {
-    label: selectedPreset === 'custom'
-      ? `Current (${format(parseISO(currentStart), 'MMM yyyy')} - ${format(parseISO(currentEnd), 'MMM yyyy')})`
-      : `Current (${selectedPreset.toUpperCase().replace(/-/g, ' ')})`,
-    startDate: currentStart,
-    endDate: currentEnd,
-    isCurrent: true,
-  };
+  // Calculate periods safely
+  let currentPeriod = null;
+  let allPeriods = [];
+  let availableComparisonPeriods = [];
 
-  // All periods for API call - sorted chronologically (earliest to latest)
-  const allPeriods = [currentPeriod, ...comparisonPeriods].sort((a, b) =>
-    new Date(a.startDate + 'T00:00:00') - new Date(b.startDate + 'T00:00:00')
-  );
+  // Only generate periods if data is loaded
+  if (!isLoadingDataDate && currentStart && currentEnd) {
+    // Current period object (always included)
+    currentPeriod = {
+      label: selectedPreset === 'custom'
+        ? `Current (${format(parseISO(currentStart), 'MMM yyyy')} - ${format(parseISO(currentEnd), 'MMM yyyy')})`
+        : `Current (${selectedPreset.toUpperCase().replace(/-/g, ' ')})`,
+      startDate: currentStart,
+      endDate: currentEnd,
+      isCurrent: true,
+    };
 
-  // Dynamic comparison periods based on current period's date range
-  // This ensures apples-to-apples comparison across years
-  const currentStartDate = parseISO(currentStart);
-  const currentEndDate = parseISO(currentEnd);
+    // Dynamic comparison periods based on current period's date range
+    // This ensures apples-to-apples comparison across years
+    const currentStartDate = parseISO(currentStart);
+    const currentEndDate = parseISO(currentEnd);
 
-  // Extract month and day from current period
-  const startMonth = currentStartDate.getMonth();
-  const startDay = currentStartDate.getDate();
-  const endMonth = currentEndDate.getMonth();
-  const endDay = currentEndDate.getDate();
-  const currentYear = currentEndDate.getFullYear();
+    // Extract month and day from current period
+    const startMonth = currentStartDate.getMonth();
+    const startDay = currentStartDate.getDate();
+    const endMonth = currentEndDate.getMonth();
+    const endDay = currentEndDate.getDate();
+    const currentYear = currentEndDate.getFullYear();
 
-  // Check if current period is a full year
-  const isFullYear = startMonth === 0 && startDay === 1 && endMonth === 11 && endDay === 31;
+    // Check if current period is a full year
+    const isFullYear = startMonth === 0 && startDay === 1 && endMonth === 11 && endDay === 31;
 
-  // Get earliest year from database to only offer years with actual data
-  const earliestYear = dataRange?.earliest?.year;
+    // Get earliest year from database to only offer years with actual data
+    const earliestYear = dataRange?.earliest?.year;
 
-  // Generate comparison periods dynamically based on available data
-  const availableComparisonPeriods = [];
-
-  // Only generate periods if we have data range info
-  if (earliestYear) {
-    // Add matching periods for previous years (up to 3 years back)
-    [currentYear - 1, currentYear - 2, currentYear - 3].forEach(year => {
-      if (year >= earliestYear) { // Only offer years with actual data
-        const label = isFullYear
-          ? `${year} (Full Year)`
-          : `${year} (${format(currentStartDate, 'MMM d')} - ${format(currentEndDate, 'MMM d')})`;
-
-        availableComparisonPeriods.push({
-          label,
-          startDate: format(new Date(year, startMonth, startDay), 'yyyy-MM-dd'),
-          endDate: format(new Date(year, endMonth, endDay), 'yyyy-MM-dd'),
-        });
-      }
-    });
-
-    // If current is NOT a full year, also add full year options for context
-    if (!isFullYear) {
+    // Generate comparison periods dynamically based on available data
+    // Only generate periods if we have data range info
+    if (earliestYear) {
+      // Add matching periods for previous years (up to 3 years back)
       [currentYear - 1, currentYear - 2, currentYear - 3].forEach(year => {
         if (year >= earliestYear) { // Only offer years with actual data
+          const label = isFullYear
+            ? `${year} (Full Year)`
+            : `${year} (${format(currentStartDate, 'MMM d')} - ${format(currentEndDate, 'MMM d')})`;
+
           availableComparisonPeriods.push({
-            label: `${year} (Full Year)`,
-            startDate: `${year}-01-01`,
-            endDate: `${year}-12-31`,
+            label,
+            startDate: format(new Date(year, startMonth, startDay), 'yyyy-MM-dd'),
+            endDate: format(new Date(year, endMonth, endDay), 'yyyy-MM-dd'),
           });
         }
       });
+
+      // If current is NOT a full year, also add full year options for context
+      if (!isFullYear) {
+        [currentYear - 1, currentYear - 2, currentYear - 3].forEach(year => {
+          if (year >= earliestYear) { // Only offer years with actual data
+            availableComparisonPeriods.push({
+              label: `${year} (Full Year)`,
+              startDate: `${year}-01-01`,
+              endDate: `${year}-12-31`,
+            });
+          }
+        });
+      }
     }
+    
+    // All periods for API call - sorted chronologically (earliest to latest)
+    allPeriods = [currentPeriod, ...comparisonPeriods].sort((a, b) =>
+      new Date(a.startDate + 'T00:00:00') - new Date(b.startDate + 'T00:00:00')
+    );
   }
 
   // Fetch period comparison data
@@ -168,8 +179,12 @@ const PeriodComparison = () => {
         : selectedClinics[0];
       return financialsAPI.periodCompare(clinicParam, allPeriods);
     },
-    enabled: selectedClinics.length > 0 && allPeriods.length > 0,
+    enabled: !isLoadingDataDate && !!currentPeriod && selectedClinics.length > 0 && allPeriods.length > 0,
   });
+
+  if (isLoadingDataDate || !currentStart || !currentEnd || !currentPeriod) {
+    return <Loading message="Initializing date filters..." />;
+  }
 
   const handleClinicToggle = (clinicId) => {
     // Handle "All Clinics" selection

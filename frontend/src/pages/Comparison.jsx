@@ -32,7 +32,7 @@ import { COMPARISON_COLORS, CHART_CONFIG, formatAxisValue, getColorByIndex } fro
 import { LINE_ITEMS, getAllLineItems, getLineItemValue } from '../config/lineItems';
 
 const Comparison = () => {
-  const { startDate, endDate, selectedClinics, toggleClinicSelection } = useDateFilter();
+  const { startDate, endDate, selectedClinics, toggleClinicSelection, isLoadingDataDate } = useDateFilter();
 
   // State for selected line items to compare
   const [selectedLineItems, setSelectedLineItems] = useState([]);
@@ -111,6 +111,11 @@ const Comparison = () => {
     const clinicIndex = clinics.findIndex(c => c.id === clinicId);
     return getColorByIndex(clinicIndex >= 0 ? clinicIndex : 0);
   };
+
+  // Wait for dynamic date initialization
+  if (isLoadingDataDate) {
+    return <Loading message="Initializing date filters..." />;
+  }
 
   if (clinicsLoading) {
     return <Loading message="Loading clinics..." />;

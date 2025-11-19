@@ -19,7 +19,7 @@ import { useDateFilter } from '../context/DateFilterContext';
  */
 const ClinicView = () => {
   const { clinicId } = useParams();
-  const { startDate, endDate } = useDateFilter();
+  const { startDate, endDate, isLoadingDataDate } = useDateFilter();
 
   // Fetch clinic details
   const {
@@ -46,6 +46,11 @@ const ClinicView = () => {
 
   if (clinicError) {
     return <ErrorMessage message={clinicError.message} />;
+  }
+
+  // Wait for dynamic date initialization
+  if (isLoadingDataDate) {
+    return <Loading message="Initializing date filters..." />;
   }
 
   if (clinicLoading) {

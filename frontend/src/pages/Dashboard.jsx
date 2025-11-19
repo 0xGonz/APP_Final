@@ -18,7 +18,7 @@ import { useFilteredPnL, useFilteredTrends } from '../hooks/useFilteredData';
  * - Connected to global date filter context
  */
 const Dashboard = () => {
-  const { startDate, endDate } = useDateFilter();
+  const { startDate, endDate, isLoadingDataDate } = useDateFilter();
 
   // Fetch consolidated trends data
   const {
@@ -61,12 +61,6 @@ const Dashboard = () => {
       }),
   });
 
-  const isLoading = trendsLoading || kpisLoading || pnlLoading;
-
-  if (trendsError) {
-    return <ErrorMessage message={trendsError.message} />;
-  }
-
   // Use modular hooks for data filtering and validation
   const {
     data: filteredPnLData,
@@ -80,6 +74,17 @@ const Dashboard = () => {
     summary: trendsSummary,
     isEmpty: trendsIsEmpty,
   } = useFilteredTrends(trendsData, startDate, endDate);
+
+  // Wait for dynamic date initialization
+  if (isLoadingDataDate) {
+    return <Loading message="Initializing date filters..." />;
+  }
+
+  const isLoading = trendsLoading || kpisLoading || pnlLoading;
+
+  if (trendsError) {
+    return <ErrorMessage message={trendsError.message} />;
+  }
 
   // Transform KPI data (already filtered by backend)
   const kpiCardData = {

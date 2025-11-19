@@ -22,7 +22,7 @@ import { CHART_COLORS, CHART_CONFIG, formatAxisValue } from '../config/chartThem
 import { useFilteredTrends } from '../hooks/useFilteredData';
 
 const Analytics = () => {
-  const { startDate, endDate, selectedClinic, setSelectedClinic } = useDateFilter();
+  const { startDate, endDate, selectedClinic, setSelectedClinic, isLoadingDataDate } = useDateFilter();
   const [selectedMetric, setSelectedMetric] = useState('totalIncome');
   const [chartType, setChartType] = useState('area');
 
@@ -81,6 +81,11 @@ const Analytics = () => {
   // Transform other data using modular utilities with null-safety
   const growthMetrics = transformGrowthData(growthData || { monthOverMonth: 0, yearOverYear: 0 });
   const kpiMetrics = transformKPIData(kpis || {});
+
+  // Wait for dynamic date initialization
+  if (isLoadingDataDate) {
+    return <Loading message="Initializing date filters..." />;
+  }
 
   // NOW check loading/error state AFTER all hooks are called
   if (trendsLoading || growthLoading || kpisLoading) {
