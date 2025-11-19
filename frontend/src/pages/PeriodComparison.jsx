@@ -93,6 +93,17 @@ const PeriodComparison = () => {
     queryFn: systemAPI.getDataRange,
   });
 
+  // Calculate isFullYear early so it's available in JSX
+  const isFullYear = currentStart && currentEnd ? (() => {
+    const currentStartDate = parseISO(currentStart);
+    const currentEndDate = parseISO(currentEnd);
+    const startMonth = currentStartDate.getMonth();
+    const startDay = currentStartDate.getDate();
+    const endMonth = currentEndDate.getMonth();
+    const endDay = currentEndDate.getDate();
+    return startMonth === 0 && startDay === 1 && endMonth === 11 && endDay === 31;
+  })() : false;
+
   // Calculate periods safely
   let currentPeriod = null;
   let allPeriods = [];
@@ -121,9 +132,6 @@ const PeriodComparison = () => {
     const endMonth = currentEndDate.getMonth();
     const endDay = currentEndDate.getDate();
     const currentYear = currentEndDate.getFullYear();
-
-    // Check if current period is a full year
-    const isFullYear = startMonth === 0 && startDay === 1 && endMonth === 11 && endDay === 31;
 
     // Get earliest year from database to only offer years with actual data
     const earliestYear = dataRange?.earliest?.year;
