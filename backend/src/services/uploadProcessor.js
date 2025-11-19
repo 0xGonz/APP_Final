@@ -194,12 +194,8 @@ function validateRecord(record) {
     return `Invalid month: ${record.month}. Must be between 1 and 12`;
   }
 
-  // Check if date is not in the future
-  const recordDate = new Date(record.year, record.month - 1);
-  const today = new Date();
-  if (recordDate > today) {
-    return `Date ${record.year}/${record.month} is in the future`;
-  }
+  // Future date validation removed - allows uploading projected/budgeted data
+  // Users can upload data for upcoming months (e.g., end-of-month uploads for next month)
 
   return null;
 }
