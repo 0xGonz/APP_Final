@@ -670,23 +670,81 @@ router.post('/period-compare', async (req, res) => {
         : 0;
 
       // Format monthly records for time-series
-      periodData.monthlyRecords = records.map(record => ({
-        date: record.date,
-        year: record.year,
-        month: record.month,
-        label: `${record.month}/${record.year}`,
-        periodLabel: label,
-        clinicName: record.clinic.name,
-        totalIncome: Number(record.totalIncome),
-        totalCOGS: Number(record.totalCOGS),
-        grossProfit: Number(record.grossProfit),
-        totalExpenses: Number(record.totalExpenses),
-        netIncome: Number(record.netIncome),
-        ...incomeFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {}),
-        ...cogsFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {}),
-        ...expenseFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {}),
-        ...otherFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {})
-      }));
+      if (clinicId === 'all') {
+        // AGGREGATE BY MONTH when showing consolidated view (all clinics)
+        const monthlyAggregated = {};
+
+        records.forEach(record => {
+          const monthKey = `${record.year}-${String(record.month).padStart(2, '0')}`;
+
+          if (!monthlyAggregated[monthKey]) {
+            // Initialize all fields to 0 for this month
+            monthlyAggregated[monthKey] = {
+              date: record.date,
+              year: record.year,
+              month: record.month,
+              label: `${record.month}/${record.year}`,
+              periodLabel: label,
+              clinicName: 'All Clinics (Consolidated)',
+              totalIncome: 0,
+              totalCOGS: 0,
+              grossProfit: 0,
+              totalExpenses: 0,
+              netIncome: 0,
+              ...incomeFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}),
+              ...cogsFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}),
+              ...expenseFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}),
+              ...otherFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {})
+            };
+          }
+
+          // Sum all values across clinics for this month
+          monthlyAggregated[monthKey].totalIncome += Number(record.totalIncome || 0);
+          monthlyAggregated[monthKey].totalCOGS += Number(record.totalCOGS || 0);
+          monthlyAggregated[monthKey].grossProfit += Number(record.grossProfit || 0);
+          monthlyAggregated[monthKey].totalExpenses += Number(record.totalExpenses || 0);
+          monthlyAggregated[monthKey].netIncome += Number(record.netIncome || 0);
+
+          // Sum all line items
+          incomeFields.forEach(field => {
+            monthlyAggregated[monthKey][field] += Number(record[field] || 0);
+          });
+          cogsFields.forEach(field => {
+            monthlyAggregated[monthKey][field] += Number(record[field] || 0);
+          });
+          expenseFields.forEach(field => {
+            monthlyAggregated[monthKey][field] += Number(record[field] || 0);
+          });
+          otherFields.forEach(field => {
+            monthlyAggregated[monthKey][field] += Number(record[field] || 0);
+          });
+        });
+
+        // Convert to array and sort by date
+        periodData.monthlyRecords = Object.values(monthlyAggregated).sort((a, b) => {
+          if (a.year !== b.year) return a.year - b.year;
+          return a.month - b.month;
+        });
+      } else {
+        // SINGLE CLINIC - Keep existing behavior
+        periodData.monthlyRecords = records.map(record => ({
+          date: record.date,
+          year: record.year,
+          month: record.month,
+          label: `${record.month}/${record.year}`,
+          periodLabel: label,
+          clinicName: record.clinic.name,
+          totalIncome: Number(record.totalIncome),
+          totalCOGS: Number(record.totalCOGS),
+          grossProfit: Number(record.grossProfit),
+          totalExpenses: Number(record.totalExpenses),
+          netIncome: Number(record.netIncome),
+          ...incomeFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {}),
+          ...cogsFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {}),
+          ...expenseFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {}),
+          ...otherFields.reduce((acc, field) => ({ ...acc, [field]: Number(record[field] || 0) }), {})
+        }));
+      }
 
       return periodData;
     }));
