@@ -2,18 +2,19 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 // Uses environment variable for flexibility across dev/production
+// Production: VITE_API_URL should be set to full backend URL (e.g., https://backend.vercel.app/api)
+// Development: defaults to http://localhost:3001/api
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api', // Relative URL works for same-domain deployment
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Log API base URL for debugging (only in development)
-if (import.meta.env.DEV) {
-  console.log('[API] Base URL:', api.defaults.baseURL);
-}
+// Log API base URL for debugging
+console.log('[API] Base URL:', api.defaults.baseURL);
+console.log('[API] Environment:', import.meta.env.MODE);
 
 // Request interceptor
 api.interceptors.request.use(
