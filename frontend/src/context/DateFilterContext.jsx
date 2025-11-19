@@ -25,9 +25,9 @@ const STORAGE_KEYS = {
 const MIGRATION_KEY = 'app_filter_migrated_v4_nov2025';
 
 export const DateFilterProvider = ({ children }) => {
-  // Latest available data date (fetched from backend)
-  const [latestDataDate, setLatestDataDate] = useState(null);
-  const [isLoadingDataDate, setIsLoadingDataDate] = useState(true);
+  // Latest available data date (HARDCODED - update manually when new data is added)
+  const [latestDataDate, setLatestDataDate] = useState(new Date('2025-09-30T00:00:00'));
+  const [isLoadingDataDate, setIsLoadingDataDate] = useState(false);
 
   // Initialize from localStorage (null if not found - will be set after fetching latestDataDate)
   const [startDate, setStartDate] = useState(() => {
@@ -53,52 +53,8 @@ export const DateFilterProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : [];
   });
 
-  // Fetch the latest available data date from the backend
-  useEffect(() => {
-    const fetchLatestDataDate = async () => {
-      try {
-        const data = await systemAPI.getDataRange();
-        // Handle date string with timezone fix
-        const dateStr = typeof data.latest.date === 'string' && data.latest.date.includes('T')
-          ? data.latest.date.split('T')[0] + 'T00:00:00'
-          : data.latest.date + 'T00:00:00';
-        const latestDate = new Date(dateStr);
-        setLatestDataDate(latestDate);
-        console.log('📅 Latest data date:', format(latestDate, 'MMM d, yyyy'));
-      } catch (error) {
-        console.error('Failed to fetch latest data date:', error);
-        // Fallback to today's date if API fails
-        setLatestDataDate(new Date());
-      } finally {
-        setIsLoadingDataDate(false);
-      }
-    };
-    fetchLatestDataDate();
-  }, []);
-
-  // Refetch latest date when user returns to tab (makes system dynamic)
-  useEffect(() => {
-    const handleFocus = async () => {
-      try {
-        const data = await systemAPI.getDataRange();
-        const dateStr = typeof data.latest.date === 'string' && data.latest.date.includes('T')
-          ? data.latest.date.split('T')[0] + 'T00:00:00'
-          : data.latest.date + 'T00:00:00';
-        const newLatestDate = new Date(dateStr);
-
-        // Only update if date changed
-        if (latestDataDate?.getTime() !== newLatestDate.getTime()) {
-          setLatestDataDate(newLatestDate);
-          console.log('📅 Updated latest data date:', format(newLatestDate, 'MMM d, yyyy'));
-        }
-      } catch (error) {
-        console.error('Failed to refetch latest data date:', error);
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [latestDataDate]);
+  // HARDCODED DATE - No need to fetch from backend
+  // When new data is added, update the hardcoded date above (line 29) and bump migration key (line 25)
 
   // Force migration and initialize dates after fetching latestDataDate
   useEffect(() => {
