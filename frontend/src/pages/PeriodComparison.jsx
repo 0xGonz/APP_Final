@@ -139,6 +139,9 @@ const PeriodComparison = () => {
     // Generate comparison periods dynamically based on available data
     // Only generate periods if we have data range info
     if (earliestYear) {
+      // Calculate the duration of the current period in days
+      const durationDays = Math.round((currentEndDate - currentStartDate) / (1000 * 60 * 60 * 24));
+      
       // Add matching periods for previous years (up to 3 years back)
       [currentYear - 1, currentYear - 2, currentYear - 3].forEach(year => {
         if (year >= earliestYear) { // Only offer years with actual data
@@ -146,10 +149,28 @@ const PeriodComparison = () => {
             ? `${year} (Full Year)`
             : `${year} (${format(currentStartDate, 'MMM d')} - ${format(currentEndDate, 'MMM d')})`;
 
+          // For cross-year periods (e.g., Oct 2024 - Sep 2025), we need to shift back by full years
+          // Start date: same month/day but in the target year
+          const periodStart = new Date(year, startMonth, startDay);
+          
+          // End date: add the same duration as current period
+          const periodEnd = new Date(periodStart);
+          periodEnd.setDate(periodEnd.getDate() + durationDays);
+
+          // Check if this period falls within available data range
+          const periodStartStr = format(periodStart, 'yyyy-MM-dd');
+          const periodEndStr = format(periodEnd, 'yyyy-MM-dd');
+          const earliestDataStr = dataRange?.dateRange?.start || '2023-01-01';
+          const latestDataStr = dataRange?.dateRange?.end || '2025-12-31';
+          
+          // Period has data if it overlaps with available range
+          const hasData = periodEndStr >= earliestDataStr && periodStartStr <= latestDataStr;
+
           availableComparisonPeriods.push({
             label,
-            startDate: format(new Date(year, startMonth, startDay), 'yyyy-MM-dd'),
-            endDate: format(new Date(year, endMonth, endDay), 'yyyy-MM-dd'),
+            startDate: periodStartStr,
+            endDate: periodEndStr,
+            hasData, // Flag to grey out unavailable periods
           });
         }
       });
@@ -158,10 +179,18 @@ const PeriodComparison = () => {
       if (!isFullYear) {
         [currentYear - 1, currentYear - 2, currentYear - 3].forEach(year => {
           if (year >= earliestYear) { // Only offer years with actual data
+            // Check if full year period has data
+            const fullYearStart = `${year}-01-01`;
+            const fullYearEnd = `${year}-12-31`;
+            const earliestDataStr = dataRange?.dateRange?.start || '2023-01-01';
+            const latestDataStr = dataRange?.dateRange?.end || '2025-12-31';
+            const hasData = fullYearEnd >= earliestDataStr && fullYearStart <= latestDataStr;
+
             availableComparisonPeriods.push({
               label: `${year} (Full Year)`,
-              startDate: `${year}-01-01`,
-              endDate: `${year}-12-31`,
+              startDate: fullYearStart,
+              endDate: fullYearEnd,
+              hasData,
             });
           }
         });
@@ -577,9 +606,9 @@ const PeriodComparison = () => {
                     <option
                       key={period.label}
                       value={period.label}
-                      disabled={comparisonPeriods.some(p => p.label === period.label)}
+                      disabled={comparisonPeriods.some(p => p.label === period.label) || !period.hasData}
                     >
-                      {period.label}
+                      {period.label}{!period.hasData ? ' (No Data Available)' : ''}
                     </option>
                   ))}
                 </optgroup>
@@ -589,9 +618,9 @@ const PeriodComparison = () => {
                       <option
                         key={period.label}
                         value={period.label}
-                        disabled={comparisonPeriods.some(p => p.label === period.label)}
+                        disabled={comparisonPeriods.some(p => p.label === period.label) || !period.hasData}
                       >
-                        {period.label}
+                        {period.label}{!period.hasData ? ' (No Data Available)' : ''}
                       </option>
                     ))}
                   </optgroup>
