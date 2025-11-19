@@ -162,11 +162,29 @@ const PeriodComparison = () => {
     error: comparisonError,
   } = useQuery({
     queryKey: ['period-comparison', selectedClinics, allPeriods],
-    queryFn: () => financialsAPI.periodCompare(selectedClinics.length === 1 ? selectedClinics[0] : 'all', allPeriods),
+    queryFn: () => {
+      const clinicParam = selectedClinics.includes('all') || selectedClinics.length > 1
+        ? 'all'
+        : selectedClinics[0];
+      return financialsAPI.periodCompare(clinicParam, allPeriods);
+    },
     enabled: selectedClinics.length > 0 && allPeriods.length > 0,
   });
 
   const handleClinicToggle = (clinicId) => {
+    // Handle "All Clinics" selection
+    if (clinicId === 'all') {
+      setSelectedClinics(['all']);
+      return;
+    }
+
+    // If "All Clinics" is currently selected, switch to individual clinic
+    if (selectedClinics.includes('all')) {
+      setSelectedClinics([clinicId]);
+      return;
+    }
+
+    // Existing logic for individual clinic selection
     if (selectedClinics.includes(clinicId)) {
       // Remove clinic
       setSelectedClinics(selectedClinics.filter(id => id !== clinicId));
@@ -420,9 +438,37 @@ const PeriodComparison = () => {
       {/* Clinic Selector */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Select Clinics to Compare ({selectedClinics.length}/6)
+          {selectedClinics.includes('all')
+            ? 'All Clinics (Consolidated View)'
+            : `Select Clinics to Compare (${selectedClinics.length}/6)`
+          }
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* All Clinics Option */}
+          <button
+            onClick={() => handleClinicToggle('all')}
+            className={`p-4 rounded-lg border-2 transition-all text-left ${
+              selectedClinics.includes('all')
+                ? 'border-primary-500 bg-primary-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">All Clinics</h3>
+                <p className="text-sm text-gray-500">Consolidated view across all locations</p>
+              </div>
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                  selectedClinics.includes('all') ? 'bg-primary-600' : 'bg-gray-200'
+                }`}
+              >
+                {selectedClinics.includes('all') && <Check className="w-4 h-4 text-white" />}
+              </div>
+            </div>
+          </button>
+
+          {/* Individual Clinic Cards */}
           {clinics?.map((clinic) => {
             const isSelected = selectedClinics.includes(clinic.id);
             return (
