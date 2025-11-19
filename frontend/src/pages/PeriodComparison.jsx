@@ -325,16 +325,27 @@ const PeriodComparison = () => {
   // Prepare dynamic line item comparison data for time-series visualization
   const monthlyRecords = comparisonData?.monthlyRecords || [];
 
+  // Determine grouping strategy based on number of periods
+  const isSinglePeriod = comparisonData?.periods?.length === 1;
+
   // Create a map of unique months across all periods
-  // Use month number (1-12) as key to align same months from different years
+  // For single period: use year-month key to show all months chronologically
+  // For multiple periods: use month number to align same months across years
   const monthsMap = new Map();
   comparisonData?.periods?.forEach(period => {
     period.monthlyRecords?.forEach(record => {
-      const monthKey = record.month; // Use month number (1-12) to align across years
+      // For single period, use unique year-month key; for multiple, use month number
+      const monthKey = isSinglePeriod 
+        ? `${record.year}-${String(record.month).padStart(2, '0')}`
+        : record.month;
+      
       if (!monthsMap.has(monthKey)) {
         monthsMap.set(monthKey, {
-          label: monthNames[monthKey - 1], // Display "January" instead of "1/2025"
-          month: monthKey,
+          label: isSinglePeriod 
+            ? `${monthNames[record.month - 1]} ${record.year}` // "January 2023"
+            : monthNames[record.month - 1], // "January"
+          month: record.month,
+          year: record.year,
           date: record.date,
           periods: {}
         });
